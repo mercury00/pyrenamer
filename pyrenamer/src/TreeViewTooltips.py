@@ -1,5 +1,5 @@
 # Copyright (c) 2006, Daniel J. Popowich
-# 
+#
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
 # (the "Software"), to deal in the Software without restriction,
@@ -7,10 +7,10 @@
 # publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so,
 # subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be
 # included in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 # EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -68,7 +68,7 @@ get_tooltip() with the following arguments:
 
 where,
 
-    view:   the gtk.TreeView instance. 
+    view:   the gtk.TreeView instance.
     column: the gtk.TreeViewColumn instance that the mouse is
             currently over.
     path:   the path to the row that the mouse is currently over.
@@ -94,28 +94,30 @@ get_tooltip() is implemented).
 '''
 
 
-import pygtk
-pygtk.require('2.0')
+from __future__ import absolute_import
+from sys import stderr
 
-import gtk
-import gtk.gdk
-import gobject
+try:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk as gtk
+    from gi.repository import GObject as gobject
+except ImportError as e:
+    print("TreeViewTooltips.py: unable to import Gtk 3.0, {0}".format(e), file=stderr)
 
-if gtk.gtk_version < (2, 8):
-    import warnings
-
-    msg = ('''This module was developed and tested with version 2.8.18 of gtk.  You are using version %d.%d.%d.  Your milage may vary.'''
-           % gtk.gtk_version)
-    warnings.warn(msg)
-
+#if gobject.version_info < (2, 8):
+#    import warnings
+#    msg = ('''This module was developed and tested with version 2.8.18 of gtk.  You are using version %d.%d.%d.  Your milage may vary.'''
+#           % gi.version_info)
+#    warnings.warn(msg)
 
 # major, minor, patch
 version = 1, 0, 0
 
 class TreeViewTooltips:
-
+    """ tooltips class
+    """
     def __init__(self):
-        
         '''
         Initialize the tooltip.  After initialization there are two
         attributes available for advanced control:
@@ -159,12 +161,12 @@ class TreeViewTooltips:
 
     def enable(self):
         'Enable the tooltip'
-        
+
         self.__enabled = True
-        
+
     def disable(self):
         'Disable the tooltip'
-        
+
         self.__enabled = False
 
     def __show(self, tooltip, x, y):
@@ -177,12 +179,12 @@ class TreeViewTooltips:
         '''
 
         window = self.window
-        
+
         # set label
         self.label.set_label(tooltip)
         # resize window
         w, h = window.size_request()
-        # move the window 
+        # move the window
         window.move(*self.location(x,y,w,h))
         # show it
         window.show()
@@ -197,14 +199,14 @@ class TreeViewTooltips:
 
     def __leave_handler(self, view, event):
         'when the pointer leaves the view, hide the tooltip'
-        
+
         self.__hide()
 
     def __motion_handler(self, view, event):
         'As the pointer moves across the view, show a tooltip.'
 
         path = view.get_path_at_pos(int(event.x), int(event.y))
-        
+
         if self.__enabled and path:
             path, col, x, y = path
             tooltip = self.get_tooltip(view, col, path)
@@ -281,7 +283,7 @@ class TreeViewTooltips:
     def add_view(self, view):
 
         'add a gtk.TreeView to the tooltip'
-        
+
         assert isinstance(view, gtk.TreeView), \
                ('This handler should only be connected to '
                 'instances of gtk.TreeView')
@@ -291,5 +293,5 @@ class TreeViewTooltips:
 
     def get_tooltip(self, view, column, path):
         'See the module doc string for a description of this method'
-        
-        raise NotImplemented, 'Subclass must implement get_tooltip()'
+
+        raise NotImplemented('Subclass must implement get_tooltip()')

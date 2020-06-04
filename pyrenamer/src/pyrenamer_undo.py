@@ -20,10 +20,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 If you find any bugs or have any suggestions email: code@infinicode.org
 """
 
-import pyrenamer_filefuncs as renamerfilefuncs
+from __future__ import absolute_import
+from __future__ import print_function
+from . import pyrenamer_filefuncs as renamerfilefuncs
 
 class PyrenamerUndo:
-
+    """ class
+    """
     def __init__(self):
         self.undo_memory = []
 
@@ -36,9 +39,9 @@ class PyrenamerUndo:
     def undo(self):
         for i in self.undo_memory:
             renamerfilefuncs.rename_file(i[1], i[0])
-            print "Undo: %s -> %s" % (i[1] , i[0])
+            print("Undo: %s -> %s" % (i[1] , i[0]))
 
     def redo(self):
         for i in self.undo_memory:
             renamerfilefuncs.rename_file(i[0], i[1])
-            print "Redo: %s -> %s" % (i[0] , i[1])
+            print("Redo: %s -> %s" % (i[0] , i[1]))

@@ -89,6 +89,9 @@
 #
 
 # field type descriptions as (length, abbreviation, full name) tuples
+from __future__ import absolute_import
+from __future__ import print_function
+
 FIELD_TYPES=(
     (0, 'X',  'Proprietary'), # no such type
     (1, 'B',  'Byte'),
@@ -402,7 +405,7 @@ def olympus_special_mode(v):
         3: 'Bottom to top',
         4: 'Top to bottom'}
     return '%s - sequence %d - %s' % (a[v[0]], v[1], b[v[2]])
-        
+
 MAKERNOTE_OLYMPUS_TAGS={
     # ah HAH! those sneeeeeaky bastids! this is how they get past the fact
     # that a JPEG thumbnail is not allowed in an uncompressed TIFF file
@@ -701,7 +704,7 @@ def s2n_motorola(str):
 # extract multibyte integer in Intel format (big endian)
 def s2n_intel(str):
     x=0
-    y=0L
+    y=0
     for c in str:
         x=x | (ord(c) << y)
         y=y+8
@@ -748,10 +751,10 @@ class IFD_Tag:
         self.field_length=field_length
         # either a string or array of data items
         self.values=values
-        
+
     def __str__(self):
         return self.printable
-    
+
     def __repr__(self):
         return '(0x%04X) %s=%s @ %d' % (self.tag,
                                         FIELD_TYPES[self.field_type][2],
@@ -767,7 +770,7 @@ class EXIF_header:
         self.fake_exif=fake_exif
         self.debug=debug
         self.tags={}
-        
+
     # convert slice to integer, based on sign and endian flags
     # usually this offset is assumed to be relative to the beginning of the
     # start of the EXIF information.  For some cameras that use relative tags,
@@ -781,7 +784,7 @@ class EXIF_header:
             val=s2n_motorola(slice)
         # Sign extension ?
         if signed:
-            msb=1L << (8*length-1)
+            msb=1 << (8*length-1)
             if val & msb:
                 val=val-(msb << 1)
         return val
@@ -796,7 +799,7 @@ class EXIF_header:
                 s=chr(offset & 0xFF)+s
             offset=offset >> 8
         return s
-    
+
     # return first IFD
     def first_IFD(self):
         return self.s2n(4, 4)
@@ -831,8 +834,7 @@ class EXIF_header:
             field_type=self.s2n(entry+2, 2)
             if not 0 < field_type < len(FIELD_TYPES):
                 # unknown field type
-                raise ValueError, \
-                      'unknown type %d in tag 0x%04X' % (field_type, tag)
+                raise ValueError('unknown type %d in tag 0x%04X' % (field_type, tag))
             typelen=FIELD_TYPES[field_type][0]
             count=self.s2n(entry+4, 4)
             offset=entry+8
@@ -893,8 +895,8 @@ class EXIF_header:
                                                      values, field_offset,
                                                      count*typelen)
             if self.debug:
-                print ' debug:   %s: %s' % (tag_name,
-                                            repr(self.tags[ifd_name+' '+tag_name]))
+                print(' debug:   %s: %s' % (tag_name,
+                                            repr(self.tags[ifd_name+' '+tag_name])))
 
     # extract uncompressed TIFF thumbnail (like pulling teeth)
     # we take advantage of the pre-existing layout in the thumbnail IFD as
@@ -909,7 +911,7 @@ class EXIF_header:
         # ... plus thumbnail IFD data plus a null "next IFD" pointer
         self.file.seek(self.offset+thumb_ifd)
         tiff+=self.file.read(entries*12+2)+'\x00\x00\x00\x00'
-        
+
         # fix up large value offset pointers into data area
         for i in range(entries):
             entry=thumb_ifd+2+12*i
@@ -937,7 +939,7 @@ class EXIF_header:
                 # get original data and store it
                 self.file.seek(self.offset+oldoff)
                 tiff+=self.file.read(count*typelen)
-                
+
         # add pixel strips and update strip offset info
         old_offsets=self.tags['Thumbnail StripOffsets'].values
         old_counts=self.tags['Thumbnail StripByteCounts'].values
@@ -949,9 +951,9 @@ class EXIF_header:
             # add pixel strip to end
             self.file.seek(self.offset+old_offsets[i])
             tiff+=self.file.read(old_counts[i])
-            
+
         self.tags['TIFFThumbnail']=tiff
-        
+
     # decode all the camera-specific MakerNote formats
 
     # Note is the data that comprises this MakerNote.  The MakerNote will
@@ -982,23 +984,23 @@ class EXIF_header:
         # not at the start of the makernote, it's probably type 2, since some
         # cameras work that way.
         if make in ('NIKON', 'NIKON CORPORATION'):
-            if note.values[0:7] == [78, 105, 107, 111, 110, 00, 01]:
+            if note.values[0:7] == [78, 105, 107, 111, 110, 0o0, 0o1]:
                 if self.debug:
-                    print "Looks like a type 1 Nikon MakerNote."
+                    print("Looks like a type 1 Nikon MakerNote.")
                 self.dump_IFD(note.field_offset+8, 'MakerNote',
                               dict=MAKERNOTE_NIKON_OLDER_TAGS)
-            elif note.values[0:7] == [78, 105, 107, 111, 110, 00, 02]:
+            elif note.values[0:7] == [78, 105, 107, 111, 110, 0o0, 0o2]:
                 if self.debug:
-                    print "Looks like a labeled type 2 Nikon MakerNote"
-                if note.values[12:14] != [0, 42] and note.values[12:14] != [42L, 0L]:
-                    raise ValueError, "Missing marker tag '42' in MakerNote."
+                    print("Looks like a labeled type 2 Nikon MakerNote")
+                if note.values[12:14] != [0, 42] and note.values[12:14] != [42, 0]:
+                    raise ValueError("Missing marker tag '42' in MakerNote.")
                 # skip the Makernote label and the TIFF header
                 self.dump_IFD(note.field_offset+10+8, 'MakerNote',
                               dict=MAKERNOTE_NIKON_NEWER_TAGS, relative=1)
             else:
                 # E99x or D1
                 if self.debug:
-                    print "Looks like an unlabeled type 2 Nikon MakerNote"
+                    print("Looks like an unlabeled type 2 Nikon MakerNote")
                 self.dump_IFD(note.field_offset, 'MakerNote',
                               dict=MAKERNOTE_NIKON_NEWER_TAGS)
             return
@@ -1014,7 +1016,7 @@ class EXIF_header:
             self.dump_IFD(note.field_offset, 'MakerNote',
                           dict=MAKERNOTE_CASIO_TAGS)
             return
-        
+
         # Fujifilm
         if make == 'FUJIFILM':
             # bug: everything else is "Motorola" endian, but the MakerNote
@@ -1031,7 +1033,7 @@ class EXIF_header:
             self.endian=endian
             self.offset=offset
             return
-        
+
         # Canon
         if make == 'Canon':
             self.dump_IFD(note.field_offset, 'MakerNote',
@@ -1047,7 +1049,7 @@ class EXIF_header:
         for i in range(1, len(value)):
             x=dict.get(i, ('Unknown', ))
             if self.debug:
-                print i, x
+                print(i, x)
             name=x[0]
             if len(x) > 1:
                 val=x[1].get(value[i], 'Unknown')
@@ -1093,7 +1095,7 @@ def process_file(file, debug=0):
 
     # deal with the EXIF info we found
     if debug:
-        print {'I': 'Intel', 'M': 'Motorola'}[endian], 'format'
+        print({'I': 'Intel', 'M': 'Motorola'}[endian], 'format')
     hdr=EXIF_header(file, endian, offset, fake_exif, debug)
     ifd_list=hdr.list_IFDs()
     ctr=0
@@ -1106,27 +1108,27 @@ def process_file(file, debug=0):
         else:
             IFD_name='IFD %d' % ctr
         if debug:
-            print ' IFD %d (%s) at offset %d:' % (ctr, IFD_name, i)
+            print(' IFD %d (%s) at offset %d:' % (ctr, IFD_name, i))
         hdr.dump_IFD(i, IFD_name)
         # EXIF IFD
         exif_off=hdr.tags.get(IFD_name+' ExifOffset')
         if exif_off:
             if debug:
-                print ' EXIF SubIFD at offset %d:' % exif_off.values[0]
+                print(' EXIF SubIFD at offset %d:' % exif_off.values[0])
             hdr.dump_IFD(exif_off.values[0], 'EXIF')
             # Interoperability IFD contained in EXIF IFD
             intr_off=hdr.tags.get('EXIF SubIFD InteroperabilityOffset')
             if intr_off:
                 if debug:
-                    print ' EXIF Interoperability SubSubIFD at offset %d:' \
-                          % intr_off.values[0]
+                    print(' EXIF Interoperability SubSubIFD at offset %d:' \
+                          % intr_off.values[0])
                 hdr.dump_IFD(intr_off.values[0], 'EXIF Interoperability',
                              dict=INTR_TAGS)
         # GPS IFD
         gps_off=hdr.tags.get(IFD_name+' GPSInfo')
         if gps_off:
             if debug:
-                print ' GPS SubIFD at offset %d:' % gps_off.values[0]
+                print(' GPS SubIFD at offset %d:' % gps_off.values[0])
             hdr.dump_IFD(gps_off.values[0], 'GPS', dict=GPS_TAGS)
         ctr+=1
 
@@ -1134,48 +1136,49 @@ def process_file(file, debug=0):
     thumb=hdr.tags.get('Thumbnail Compression')
     if thumb and thumb.printable == 'Uncompressed TIFF':
         hdr.extract_TIFF_thumbnail(thumb_ifd)
-        
+
     # JPEG thumbnail (thankfully the JPEG data is stored as a unit)
     thumb_off=hdr.tags.get('Thumbnail JPEGInterchangeFormat')
     if thumb_off:
         file.seek(offset+thumb_off.values[0])
         size=hdr.tags['Thumbnail JPEGInterchangeFormatLength'].values[0]
         hdr.tags['JPEGThumbnail']=file.read(size)
-        
+
     # deal with MakerNote contained in EXIF IFD
-    if hdr.tags.has_key('EXIF MakerNote'):
+    if 'EXIF MakerNote' in hdr.tags:
         hdr.decode_maker_note()
 
     # Sometimes in a TIFF file, a JPEG thumbnail is hidden in the MakerNote
     # since it's not allowed in a uncompressed TIFF IFD
-    if not hdr.tags.has_key('JPEGThumbnail'):
+    if 'JPEGThumbnail' not in hdr.tags:
         thumb_off=hdr.tags.get('MakerNote JPEGThumbnail')
         if thumb_off:
             file.seek(offset+thumb_off.values[0])
             hdr.tags['JPEGThumbnail']=file.read(thumb_off.field_length)
-            
+
     return hdr.tags
 
 # library test/debug function (dump given files)
 if __name__ == '__main__':
     import sys
-    
+
     if len(sys.argv) < 2:
-        print 'Usage: %s files...\n' % sys.argv[0]
-        sys.exit(0)
-        
+        print('Usage: %s files...\n' % sys.argv[0])
+        raise SystemExit
+        #sys.exit(0)
+
     for filename in sys.argv[1:]:
         try:
             file=open(filename, 'rb')
         except:
-            print filename, 'unreadable'
-            print
+            print(filename, 'unreadable')
+            print()
             continue
-        print filename+':'
+        print(filename+':')
         # data=process_file(file, 1) # with debug info
         data=process_file(file)
         if not data:
-            print 'No EXIF information found'
+            print('No EXIF information found')
             continue
 
         x=data.keys()
@@ -1184,10 +1187,10 @@ if __name__ == '__main__':
             if i in ('JPEGThumbnail', 'TIFFThumbnail'):
                 continue
             try:
-                print '   %s (%s): %s' % \
-                      (i, FIELD_TYPES[data[i].field_type][2], data[i].printable)
+                print('   %s (%s): %s' % \
+                      (i, FIELD_TYPES[data[i].field_type][2], data[i].printable))
             except:
-                print 'error', i, '"', data[i], '"'
-        if data.has_key('JPEGThumbnail'):
-            print 'File has JPEG thumbnail'
-        print
+                print('error', i, '"', data[i], '"')
+        if 'JPEGThumbnail' in data:
+            print('File has JPEG thumbnail')
+        print()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! /usr/local/pyrenamer/bin/python3
 # -*- coding: utf-8 -*-
 
 """
@@ -7,12 +7,12 @@ Copyright (C) 2006-07 Adolfo González Blázquez <code@infinicode.org>
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version. 
+of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details. 
+GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
@@ -21,69 +21,56 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 If you find any bugs or have any suggestions email: code@infinicode.org
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+
+from sys import stderr
 try:
-    import pygtk
-    pygtk.require('2.0')
-except:
-      print "PyGtk 2.0 or later required for this app to run"
-      raise SystemExit
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk as gtk
+    from gi.repository import Gdk as gdk
+    from gi.repository import GObject as gobject
+except Exception as e:
+    print("pyrenamer.bin: Gtk 3.0 or later from PyGObject required for this app to run\n{0}".format(e), file=stderr)
+    raise SystemExit
 
 try:
-    import gtk
     from pyrenamer import pyrenamer
-except Exception, e:
-	print "ERROR:", e
-	raise SystemExit
+except Exception as e:
+    print("pyrenamer.bin: ERROR: {0}".format(e))
+    raise SystemExit
 
 import os
 import sys
-import getopt
+import argparse
 
+def command_unknown(cmd) -> None:
+    """ Displays error on bad command """
+    print("Run '%s --help' to see a full list of available command line options." % os.path.basename(sys.argv[0]))
 
-def command_usage():
-	""" Prints application usage from command line """
-	print "Usage: %s [options] start_dir" % os.path.basename(sys.argv[0])
-	print "\n%s options:" % os.path.basename(sys.argv[0])
-	print "	-?, --help		Displays this dialog"
-	print "	-r, --root root_dir	Start pyRenamer with a new root dir"
-	sys.exit(0)
+def parse_commandline_options() -> dict:
+    """ Parses options passed by command line and acts """
+    parser = argparse.ArgumentParser(description="PyRenamer program")
+    parser.add_argument('startdir', default=None, help="The starting directory for pyrenamer to process")
+    parser.add_argument('--root', '-r', default=None, help="Start pyRenamer with a new root dir")
+    parser.add_argument('--debug', '-d', action='store_true', help="Log some debug text to the terminal")
+    try:
+        args = parser.parse_args()
+    except Exception as e:
+        print('pyrenamer_bin.parse_commandline_options: Error: {0}'.format(e))
+        command_unknown(sys.argv[1])
+        sys.exit(2)
+    return args
 
-def command_unknown(cmd):
-	""" Displays error en bad command """
-	print "Run '%s --help' to see a full list of available command line options." % os.path.basename(sys.argv[0])
+def main() -> None:
+    """
+    """
+    args = parse_commandline_options()
 
-def parse_commandline_options():
-	""" Parses options passed by command line and acts """
-	try:
-	    opts, args = getopt.getopt(sys.argv[1:],"hr:", ["help","root="])
-	except Exception, e:
-		print e
-		command_unknown(sys.argv[1])
-		sys.exit(2)
-	
-	for o, a in opts:
-		if o in ("-h", "--help"):
-			command_usage()
-		elif o in ("-r", "--root"):
-			if len(args) > 0:
-				return a, args[0]
-			else:
-				return a, None
-	
-	if len(args) > 0:
-		return None, args[0]
-	else: 
-		return None, None
-
-
-def main():
-
-	rootdir, startdir = parse_commandline_options()
-
-	gtk.gdk.threads_init()
-	py = pyrenamer.pyRenamer(rootdir, startdir)
-	gtk.main()
-    
+    gdk.threads_init()
+    py = pyrenamer.pyRenamer(args.root, args.startdir, args.debug)
+    gtk.main()
 
 if __name__ == "__main__":
     main()

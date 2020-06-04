@@ -20,58 +20,69 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 If you find any bugs or have any suggestions email: code@infinicode.org
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+from sys import stderr
+
 try:
-    import pygtk
-    pygtk.require('2.0')
-except:
-      print "PyGtk 2.0 or later required for this app to run"
+    import gi as gobject
+    gobject.require_version('Gtk', '3.0')
+    from gi.repository import Gtk as gtk
+except Exception as e:
+      print("pyrenamer_prefs.py: Gtk 3.0 or later from PyGObject required for this app to run", file=stderr)
       raise SystemExit
 
 try:
-    import gtk
-    import gtk.glade
-    import gobject
-except:
-    raise SystemExit
-
-try:
-    import gconf
+    from gi.repository import Gio
+    gconf = Gio.Settings
+    gschema = Gio.SettingsSchemaSource
     HAS_GCONF = True
 except:
     HAS_GCONF = False
 
 from os import path as ospath
-
-import pyrenamer_globals as pyrenamerglob
-
+from . import pyrenamer_globals as pyrenamerglob
+import gettext
 from gettext import gettext as _
 
 class PyrenamerPrefs:
-
+    """ class
+    """
     def __init__(self, main):
-
+        """ init
+        """
         self.main = main
 
-        self.gconf_path = '/apps/' + pyrenamerglob.name
-        self.gconf_root_dir = self.gconf_path + '/root_dir'
-        self.gconf_active_dir = self.gconf_path + '/active_dir'
-        self.gconf_window_maximized = self.gconf_path + '/window_maximized'
-        self.gconf_pane_position = self.gconf_path + '/pane_position'
-        self.gconf_window_width = self.gconf_path + '/window_width'
-        self.gconf_window_height = self.gconf_path + '/window_height'
-        self.gconf_window_posx = self.gconf_path + '/window_posx'
-        self.gconf_window_posy = self.gconf_path + '/window_posy'
-        self.gconf_options_shown = self.gconf_path + '/options_shown'
-        self.gconf_filedir = self.gconf_path + '/filedir'
-        self.gconf_keepext = self.gconf_path + '/keepext'
-        self.gconf_autopreview  = self.gconf_path + '/autopreview'
+        self.gconf_basepath = 'org.infinicode.'
+        self.gconf_path = self.gconf_basepath + pyrenamerglob.name
+        self.gconf_client = self.get_gsettings()
 
+        self.gconf_root_dir = 'root-dir'
+        self.gconf_active_dir = 'active-dir'
+        self.gconf_window_maximized = 'window-maximized'
+        self.gconf_pane_position = 'pane-position'
+        self.gconf_window_width = 'window-width'
+        self.gconf_window_height = 'window-height'
+        self.gconf_window_posx = 'window-posx'
+        self.gconf_window_posy = 'window-posy'
+        self.gconf_options_shown = 'options-shown'
+        self.gconf_filedir = 'options-filedir'
+        self.gconf_keepext = 'keepext'
+        self.gconf_autopreview  = 'autopreview'
+
+    def get_gsettings(self):
+        """ retrieve the gsettings object """
+        schema_source = gschema.new_from_directory(pyrenamerglob.schemas_dir, gschema.get_default(), False)
+        schema = schema_source.lookup(self.gconf_path, False)
+        settings = gconf.new_full(schema, None, None)
+        return settings
 
     def create_preferences_dialog(self):
         """ Create Preferences dialog and connect signals """
-
         # Create the window
-        self.preferences_tree = gtk.glade.XML(pyrenamerglob.gladefile, "prefs_window")
+        #self.preferences_tree = gtk.glade.XML(pyrenamerglob.gladefile, "prefs_window")
+        self.preferences_tree = gtk.Builder()
+        self.preferences_tree.add_from_file(pyrenamerglob.gladefile)
 
         # Get text entries and buttons
         self.prefs_window = self.preferences_tree.get_widget('prefs_window')
@@ -91,7 +102,7 @@ class PyrenamerPrefs:
         self.preferences_tree.signal_autoconnect(signals)
 
         # Fill the panel with gconf values or actual values (if gconf is empty)
-        client = gconf.client_get_default()
+        client = self.gconf_client
         root_dir = client.get_string(self.gconf_root_dir)
         if root_dir == (None or ''): root_dir = self.main.root_dir
         active_dir = client.get_string(self.gconf_active_dir)
@@ -215,7 +226,7 @@ class PyrenamerPrefs:
 
     def preferences_save(self):
         """ Width and height are saved on the configure_event callback for main_window """
-        client = gconf.client_get_default()
+        client = self.gconf_client
         client.set_int(self.gconf_pane_position, self.main.pane_position)
         client.set_bool(self.gconf_window_maximized, self.main.window_maximized)
         client.set_int(self.gconf_window_width, self.main.window_width)
@@ -230,13 +241,13 @@ class PyrenamerPrefs:
 
     def preferences_save_dirs(self):
         """ Save default directories """
-        client = gconf.client_get_default()
+        client = self.gconf_client
         client.set_string(self.gconf_root_dir, self.main.root_dir)
         client.set_string(self.gconf_active_dir, self.main.active_dir)
 
     def preferences_read(self):
         """ The name says it all... """
-        client = gconf.client_get_default()
+        client = self.gconf_client
 
         root_dir = client.get_string(self.gconf_root_dir)
         if root_dir != None and root_dir != '': self.main.root_dir = root_dir
@@ -247,7 +258,7 @@ class PyrenamerPrefs:
         pane_position = client.get_int(self.gconf_pane_position)
         if pane_position != None: self.main.pane_position = pane_position
 
-        maximized = client.get_bool(self.gconf_window_maximized)
+        maximized = client.get_boolean(self.gconf_window_maximized)
         if maximized != None: self.main.window_maximized = maximized
 
         width = client.get_int(self.gconf_window_width)
@@ -262,14 +273,14 @@ class PyrenamerPrefs:
             self.main.window_posx = posx
             self.main.window_posy = posy
 
-        options_shown = client.get_bool(self.gconf_options_shown)
+        options_shown = client.get_boolean(self.gconf_options_shown)
         if options_shown != None: self.main.options_shown = options_shown
 
         filedir = client.get_int(self.gconf_filedir)
         if filedir != None: self.main.filedir = filedir
 
-        keepext = client.get_bool(self.gconf_keepext)
+        keepext = client.get_boolean(self.gconf_keepext)
         if keepext != None: self.main.keepext = keepext
 
-        autopreview = client.get_bool(self.gconf_autopreview)
+        autopreview = client.get_boolean(self.gconf_autopreview)
         if autopreview != None: self.main.autopreview = autopreview

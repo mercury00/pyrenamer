@@ -20,37 +20,42 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 If you find any bugs or have any suggestions email: code@infinicode.org
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import os
-import dircache
 import glob
 import re
 import sys
 import time
 import random
 
-import pyrenamer_globals
-
-import EXIF
+from . import pyrenamer_globals
+from . import EXIF
 
 if pyrenamer_globals.have_hachoir:
-    from pyrenamer_metadata import PyrenamerMetadataMusic
-
+    from . import pyrenamer_metadata
+    PyrenamerMetadatMusic = pyrenamer_metadata.PyrenamerMetadataMusic
 if pyrenamer_globals.have_eyed3:
     import eyeD3
 
 from gettext import gettext as _
 
-STOP = False
+global_cache = dict()
+def dircache_listdir(path):
+    res = global_cache.get(path)
+    if res is None:
+        res = oslistdir(path)
+        global_cache[path] = res
+    return res
 
+STOP = False
 def set_stop(stop):
     """ Set stop var to see if ther's no need to keep reading files """
     global STOP
     STOP = stop
 
-
 def get_stop():
     return STOP
-
 
 def escape_pattern(pattern):
     """ Escape special chars on patterns, so glob doesn't get confused """
@@ -65,7 +70,7 @@ def get_file_listing(dir, mode, pattern=None):
     filelist = []
 
     if  pattern == (None or ''):
-        listaux = dircache.listdir(dir)
+        listaux = dircache_listdir(dir)
     else:
         if dir != '/': dir += '/'
         dir = escape_pattern(dir + pattern)
@@ -123,7 +128,7 @@ def get_dir_listing(dir):
 
     dirlist = []
 
-    listaux = dircache.listdir(dir)
+    listaux = dircache_listdir(dir)
     listaux.sort(key=str.lower)
     for elem in listaux:
         if STOP: return dirlist
@@ -320,14 +325,14 @@ def rename_using_patterns(name, path, pattern_ini, pattern_end, count):
         groups = repattern.search(name).groups()
 
         for i in range(len(groups)):
-            newname = newname.replace('{'+`i+1`+'}',groups[i])
+            newname = newname.replace('{'+repr(i+1)+'}',groups[i])
     except:
         return None, None
 
     # Replace {num} with item number.
     # If {num2} the number will be 02
     # If {num3+10} the number will be 010
-    count = `count`
+    count = repr(count)
     cr = re.compile("{(num)([0-9]*)}"
                     "|{(num)([0-9]*)(\+)([0-9]*)}")
     try:
@@ -476,36 +481,36 @@ def get_exif_data(path):
     try:
         file = open(path, 'rb')
     except:
-        print "ERROR: Opening image file", path
+        print("ERROR: Opening image file", path)
         return date, width, height, cameramaker, cameramodel
 
     try:
-        tags = EXIF.process_file(file)
+        tags = pyrenamer.EXIF.process_file(file)
         if not tags:
-            print "ERROR: No EXIF tags on", path
+            print("ERROR: No EXIF tags on", path)
             return date, width, height, cameramaker, cameramodel
     except:
-        print "ERROR: proccesing EXIF tags on", path
+        print("ERROR: proccesing EXIF tags on", path)
         return date, width, height, cameramaker, cameramodel
 
     # tags['EXIF DateTimeOriginal'] = "2001:03:31 12:27:36"
-    if tags.has_key('EXIF DateTimeOriginal'):
+    if 'EXIF DateTimeOriginal' in tags:
         data = str(tags['EXIF DateTimeOriginal'])
         try:
             date = time.strptime(data, "%Y:%m:%d %H:%M:%S")
         except:
             date = None
 
-    if tags.has_key('EXIF ExifImageWidth'):
+    if 'EXIF ExifImageWidth' in tags:
         width = str(tags['EXIF ExifImageWidth'])
 
-    if tags.has_key('EXIF ExifImageLength'):
+    if 'EXIF ExifImageLength' in tags:
         height = str(tags['EXIF ExifImageLength'])
 
-    if tags.has_key('Image Make'):
+    if 'Image Make' in tags:
         cameramaker = str(tags['Image Make'])
 
-    if tags.has_key('Image Model'):
+    if 'Image Model' in tags:
         cameramodel = str(tags['Image Model'])
 
     return date, width, height, cameramaker, cameramodel
@@ -570,51 +575,51 @@ def replace_music_eyed3(name, path, newname, newpath):
         try:
             audioFile = eyeD3.Mp3AudioFile(file, eyeD3.ID3_ANY_VERSION)
             tag = audioFile.getTag()
-        except Exception, e:
-            print "ERROR eyeD3:", e
+        except Exception as e:
+            print("ERROR eyeD3:", e)
             newpath = get_new_path('', path)
             return '', unicode(newpath)
 
         try:
             artist = clean_metadata(tag.getArtist())
-        except Exception, e:
-            print "ERROR eyeD3:", e
+        except Exception as e:
+            print("ERROR eyeD3:", e)
             artist = None
 
         try:
             album  = clean_metadata(tag.getAlbum())
-        except Exception, e:
-            print "ERROR eyeD3:", e
+        except Exception as e:
+            print("ERROR eyeD3:", e)
             album = None
 
         try:
             title  = clean_metadata(tag.getTitle())
-        except Exception, e:
-            print "ERROR eyeD3:", e
+        except Exception as e:
+            print("ERROR eyeD3:", e)
             title = None
 
         try:
             track  = clean_metadata(tag.getTrackNum()[0])
-        except Exception, e:
-            print "ERROR eyeD3:", e
+        except Exception as e:
+            print("ERROR eyeD3:", e)
             track = None
 
         try:
             trackt = clean_metadata(tag.getTrackNum()[1])
-        except Exception, e:
-            print "ERROR eyeD3:", e
+        except Exception as e:
+            print("ERROR eyeD3:", e)
             trackt = None
 
         try:
             genre  = clean_metadata(tag.getGenre().getName())
-        except Exception, e:
-            print "ERROR eyeD3:", e
+        except Exception as e:
+            print("ERROR eyeD3:", e)
             genre = None
 
         try:
             year   = clean_metadata(tag.getYear())
-        except Exception, e:
-            print "ERROR eyeD3:", e
+        except Exception as e:
+            print("ERROR eyeD3:", e)
             year = None
 
         if artist != None: newname = newname.replace('{artist}', artist)
@@ -658,17 +663,17 @@ def rename_file(ori, new):
         return True, None    # We don't need to rename the file, but don't show error message
 
     if os.path.exists(new):
-        print _("Error while renaming %s to %s! -> %s already exists!") % (ori, new, new)
+        print(_("Error while renaming %s to %s! -> %s already exists!") % (ori, new, new))
         error = "[Errno 17] %s" % os.strerror(17)
         return False, error
 
     try:
         os.renames(ori, new)
-        print "Renaming %s to %s" % (ori, new)
+        print("Renaming %s to %s" % (ori, new))
         return True, None
-    except Exception, e:
-        print _("Error while renaming %s to %s!") % (ori, new)
-        print e
+    except Exception as e:
+        print(_("Error while renaming %s to %s!") % (ori, new))
+        print(e)
         return False, e
 
 
@@ -685,17 +690,8 @@ def insert_at(name, path, text, pos):
     return unicode(newname), unicode(newpath)
 
 
-def delete_from(name, path, ini, to, end):
+def delete_from(name, path, ini, to):
     """ Delete chars from ini till to"""
-
-    inin = ini
-    ton  = to
-
-    if end:
-        ini = len(name) -1 - ton
-        to  = len(name) -1 - inin
-        if ini < 0: ini = 0
-
     textini = name[0:ini]
     textend = name[to+1:len(name)]
     newname = textini + textend

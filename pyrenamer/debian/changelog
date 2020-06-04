@@ -1,3 +1,8 @@
+pyrenamer (0.7.0-beta1) unstable; urgency=low
+
+  * New upstream beta package:
+    - testing with python3 and gtk3
+
 pyrenamer (0.6.0-1) unstable; urgency=low
 
   * New upstream release:

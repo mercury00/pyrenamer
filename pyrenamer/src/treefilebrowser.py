@@ -21,26 +21,36 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 If you find any bugs or have any suggestions email: code@infinicode.org
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+from sys import stderr
 try:
-    import pygtk
-    pygtk.require('2.0')
-except:
-      print "PyGtk 2.0 or later required for this app to run"
-      raise SystemExit
-
-try:
-    import gtk
-    import gobject
-except:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk as gtk
+    from gi.repository import GObject as gobject
+    from gi.repository import Gdk as gdk
+    gtk.gdk = gdk
+except Exception as e:
+    print("treefilebrowser.py: Gtk 3.0 or later from PyGObject required for this app to run\n{0}".format(e), file=stderr)
     raise SystemExit
 
 from gettext import gettext as _
 
 try:
     from os import path as ospath
-    import dircache
-except:
+    from os import listdir as oslistdir
+except Exception as e:
+    print('treefilebrowser.py: error {0}'.format(e), file=stderr)
     raise SystemExit
+
+global_cache = dict()
+def dircache_listdir(path):
+    res = global_cache.get(path)
+    if res is None:
+        res = oslistdir(path)
+        global_cache[path] = res
+    return res
 
 class TreeFileBrowser(gobject.GObject):
     """ A widget that implements a tree-like file browser, like the
@@ -65,9 +75,6 @@ class TreeFileBrowser(gobject.GObject):
         """ Path is where we wan the tree initialized """
 
         gobject.GObject.__init__(self)
-
-        #Load icons
-        self.get_default_icons()
 
         self.show_hidden = False
         self.show_only_dirs = True
@@ -95,7 +102,7 @@ class TreeFileBrowser(gobject.GObject):
         elif property.name == 'path':
             return self.root
         else:
-            raise AttributeError, 'unknown property %s' % property.name
+            raise AttributeError('unknown property %s' % property.name)
 
     def do_set_property(self, property, value):
         """ GObject set_property method """
@@ -108,7 +115,7 @@ class TreeFileBrowser(gobject.GObject):
         elif property.name == 'path':
             self.root = value
         else:
-            raise AttributeError, 'unknown property %s' % property.name
+            raise AttributeError('unknown property %s' % property.name)
 
     def get_view(self):
         return self.view
@@ -287,7 +294,7 @@ class TreeFileBrowser(gobject.GObject):
 
             # Check if the dir is in the same path as the desired root
             long = len(roottree)
-            for i in range(long):
+            for i in range(int):
                 if  roottree[i] != dirtree[i]: return False
 
             # End checking
@@ -338,7 +345,7 @@ class TreeFileBrowser(gobject.GObject):
     def get_file_list(self, model, iter, dir):
         """ Get the file list from a given directory """
 
-        ls = dircache.listdir(dir)
+        ls = dircache_listdir(dir)
         ls.sort(key=str.lower)
         for i in ls:
             path = ospath.join(dir,i)
@@ -351,8 +358,8 @@ class TreeFileBrowser(gobject.GObject):
                     model.set_value(newiter, 1, i)
                     model.set_value(newiter, 2, path)
                     if ospath.isdir(path):
-                    	try: subdir = dircache.listdir(path)
-                    	except: subdir = []
+                        try: subdir = dircache_listdir(path)
+                        except: subdir = []
                         if subdir != []:
                             for i in subdir:
                                 if ospath.isdir(ospath.join(path,i)) or not self.show_only_dirs:
@@ -398,48 +405,48 @@ class TreeFileBrowser(gobject.GObject):
 
     def get_folder_closed_icon(self):
         """ Returns a pixbuf with the current theme closed folder icon """
-        return self.icon_folder_closed
+
+        icon_theme = gtk.icon_theme_get_default()
+        try:
+            icon = icon_theme.load_icon("gnome-fs-directory", 16, 0)
+            return icon
+        except gobject.GError as exc:
+            #print "Can't load icon", exc
+            try:
+                icon = icon_theme.load_icon("gtk-directory", 16, 0)
+                return icon
+            except:
+                #print "Can't load default icon"
+                return None
 
 
     def get_folder_opened_icon(self):
         """ Returns a pixbuf with the current theme opened folder icon """
-        return self.icon_folder_opened
+
+        icon_theme = gtk.icon_theme_get_default()
+        try:
+            icon = icon_theme.load_icon("gnome-fs-directory-accept", 16, 0)
+            return icon
+        except gobject.GError as exc:
+            #print "Can't load icon", exc
+            try:
+                icon = icon_theme.load_icon("gtk-directory", 16, 0)
+                return icon
+            except:
+                #print "Can't load default icon"
+                return None
 
 
     def get_file_icon(self):
         """ Returns a pixbuf with the current theme file icon """
-        return self.icon_file
 
-
-    def get_default_icons(self):
-        """ Load icons and store theme """
-
-        # Load default icon theme
         icon_theme = gtk.icon_theme_get_default()
-
-        # Load opened directory icon
         try:
-            self.icon_folder_closed = icon_theme.load_icon("gnome-fs-directory", gtk.ICON_SIZE_MENU, 0)
-        except gobject.GError, exc:
-            try:
-                self.icon_folder_closed = icon_theme.load_icon("gtk-directory", gtk.ICON_SIZE_MENU, 0)
-            except:
-                self.icon_folder_closed = None
-
-        # Load closed directory icon
-        try:
-            self.icon_folder_opened = icon_theme.load_icon("gnome-fs-directory-accept", gtk.ICON_SIZE_MENU, 0)
-        except gobject.GError, exc:
-            try:
-                self.icon_folder_opened = icon_theme.load_icon("gtk-directory", gtk.ICON_SIZE_MENU, 0)
-            except:
-                self.icon_folder_opened = None
-
-        # Load text icon
-        try:
-            self.icon_file = icon_theme.load_icon("text-x-generic", gtk.ICON_SIZE_MENU, 0)
-        except gobject.GError, exc:
-            self.icon_file = None
+            icon = icon_theme.load_icon("text-x-generic", gtk.ICON_SIZE_MENU, 0)
+            return icon
+        except gobject.GError as exc:
+            #print "Can't load icon", exc
+            return None
 
 
     #####################################################
@@ -448,7 +455,7 @@ class TreeFileBrowser(gobject.GObject):
     def make_view(self):
         """ Create the view itself.
             (Icon, dir name, path) """
-        self.model = gtk.TreeStore(gtk.gdk.Pixbuf, gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.model = gtk.TreeStore(gdk.Pixbuf, gobject.TYPE_STRING, gobject.TYPE_STRING)
 
         view = gtk.TreeView(self.model)
         view.set_headers_visible(False)

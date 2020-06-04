@@ -21,7 +21,8 @@ If you find any bugs or have any suggestions email: code@infinicode.org
 """
 
 class PyrenamerMenuCB:
-
+    """
+    """
     def __init__(self, main):
         self.main = main
 

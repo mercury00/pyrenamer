@@ -36,7 +36,7 @@ EXTRA_DIST += $(glade_DATA)
 ###################################
 @INTLTOOL_SCHEMAS_RULE@
 schemadir = $(GCONF_SCHEMA_FILE_DIR)
-schema_in_files = pyrenamer.schemas.in
+schema_in_files = org.infinicode.pyrenamer.gschema.xml
 schema_DATA = $(schema_in_files:.schemas.in=.schemas)
 EXTRA_DIST += $(schema_in_files)
 DISTCLEANFILES += $(schema_DATA)

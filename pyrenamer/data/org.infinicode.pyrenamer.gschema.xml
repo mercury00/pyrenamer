@@ -1,0 +1,53 @@
+<schemalist>
+ <schema id="org.infinicode.pyrenamer" path="/org/infinicode/pyrenamer/" gettext-domain="pyrenamer">
+        <key name="root-dir" type="s">
+            <default l10n="messages" context="root_dir">''</default>
+            <summary>Default root dir</summary>
+        </key>
+        <key name="active-dir" type="s">
+            <default l10n="messages" context="active_dir">''</default>
+            <summary>Default active dir</summary>
+        </key>
+        <key name="window-maximized" type="b">
+            <default l10n="messages" context="window_maximized">false</default>
+            <summary>Is the window maximized?</summary>
+        </key>
+        <key name="pane-position" type="i">
+            <default l10n="messages" context="pane_position">250</default>
+            <summary>Position of the pane separator</summary>
+        </key>
+        <key name="window-width" type="i">
+            <default l10n="messages" context="window_width">500</default>
+            <summary>Window width</summary>
+        </key>
+        <key name="window-height" type="i">
+            <default l10n="messages" context="window_height">500</default>
+            <summary>Window height</summary>
+        </key>
+        <key name="window-posx" type="i">
+            <default l10n="messages" context="window_posx">0</default>
+            <summary>X position of the window</summary>
+        </key>
+        <key name="window-posy" type="i">
+            <default l10n="messages" context="window_posy">0</default>
+            <summary>Y position of the window</summary>
+        </key>
+        <key name="options-shown" type="b">
+            <default l10n="messages" context="options_shown">false</default>
+            <summary>Display the options pane</summary>
+        </key>
+        <key name="options-filedir" type="i">
+            <default l10n="messages" context="options_filedir">0</default>
+            <summary>Rename files or directories</summary>
+            <description>0: Rename files / 1: Rename directories / 2: Rename files and directories</description>
+        </key>
+        <key name="keepext" type="b">
+            <default l10n="messages" context="keepext">false</default>
+            <summary>Keep files extensions</summary>
+        </key>
+        <key name="autopreview" type="b">
+            <default l10n="messages" context="autopreview">false</default>
+            <summary>Auto preview changes</summary>
+        </key>
+    </schema>
+</schemalist>

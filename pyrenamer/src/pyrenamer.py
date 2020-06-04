@@ -20,35 +20,40 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 If you find any bugs or have any suggestions email: code@infinicode.org
 """
 
-try:
-    import pygtk
-    pygtk.require('2.0')
-except:
-      print "PyGtk 2.0 or later required for this app to run"
-      raise SystemExit
+from __future__ import absolute_import
+from __future__ import print_function
+from sys import stderr
 
 try:
-    import gtk
-    import gtk.glade
-    import gobject
-except:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk as gtk
+except Exception as e:
+      print("pyrenamer.py: Gtk 3.0 or later from PyGObject required for this app to run\n{0}".format(e), file=stderr)
+      raise SystemExit
+try:
+    from gi.repository import GObject as gobject
+    from gi.repository import Gdk as gdk
+    gtk.gdk = gdk
+except Exception as e:
+    print("pyrenamer.py: Unable to import GObject\n{0}".format(e), file=stderr)
     raise SystemExit
 
 try:
-    import gconf
+    from gi.repository import Gio
     HAS_GCONF = True
-except:
+except Exception as e:
+    print('error in pyrenamer.py: {0}'.format(e), file=stderr)
     HAS_GCONF = False
 
-
-import treefilebrowser
-import pyrenamer_filefuncs as renamerfilefuncs
-import pyrenamer_globals as pyrenamerglob
-import pyrenamer_tooltips as tooltips
-import pyrenamer_prefs
-import pyrenamer_pattern_editor
-import pyrenamer_menu_cb
-import pyrenamer_undo
+from . import pyrenamer_globals as pyrenamerglob
+from . import treefilebrowser as treefilebrowser
+from . import pyrenamer_filefuncs as renamerfilefuncs
+from . import pyrenamer_tooltips as tooltips
+from . import pyrenamer_prefs
+from . import pyrenamer_pattern_editor
+from . import pyrenamer_menu_cb
+from . import pyrenamer_undo
 
 import threading
 from os import path as ospath
@@ -56,26 +61,18 @@ from os import path as ospath
 import locale
 import gettext
 
-from gettext import gettext as _
 gettext.bindtextdomain(pyrenamerglob.name, pyrenamerglob.locale_dir)
 gettext.textdomain(pyrenamerglob.name)
-gtk.glade.bindtextdomain(pyrenamerglob.name, pyrenamerglob.locale_dir)
-gtk.glade.textdomain(pyrenamerglob.name)
 
 class pyRenamer:
-
-    def __init__(self, rootdir=None, startdir=None):
-
-    	global HAS_GCONF
+    """ pyRenamer main class
+    """
+    def __init__(self, rootdir=None, startdir=None, debug=False):
+        """ initialize the new pyRenamer object
+        """
+        global HAS_GCONF
 
         self.menu_cb = pyrenamer_menu_cb.PyrenamerMenuCB(self)
-
-        # Load default icons from current theme
-        icon_theme = self.get_default_icons()
-
-        # If icon theme changes, reload icons
-        icon_theme.connect("changed", self.icon_theme_changed)
-
 
         # Main variables
         self.count = 0
@@ -124,7 +121,9 @@ class pyRenamer:
         if startdir != None: self.active_dir = startdir
 
         # Init Glade stuff
-        self.glade_tree = gtk.glade.XML(pyrenamerglob.gladefile, "main_window")
+        #get XML tree "main_window"
+        self.glade_tree = gtk.Builder()
+        self.glade_tree.add_from_file(pyrenamerglob.gladefile)
 
         # Get some widgets
         self.main_window = self.glade_tree.get_widget("main_window")
@@ -162,7 +161,6 @@ class pyRenamer:
         self.delete_radio = self.glade_tree.get_widget("delete_radio")
         self.delete_from = self.glade_tree.get_widget("delete_from")
         self.delete_to = self.glade_tree.get_widget("delete_to")
-        self.delete_end = self.glade_tree.get_widget("delete_end")
 
         self.manual = self.glade_tree.get_widget("manual")
         self.menu_clear_preview = self.glade_tree.get_widget("menu_clear_preview")
@@ -275,7 +273,6 @@ class pyRenamer:
                     "on_delete_radio_toggled": self.on_delete_radio_toggled,
                     "on_delete_from_changed": self.on_delete_from_changed,
                     "on_delete_to_changed": self.on_delete_to_changed,
-                    "on_delete_end_toggled": self.on_delete_end_toggled,
 
                     "on_images_original_pattern_changed": self.on_images_original_pattern_changed,
                     "on_images_renamed_pattern_changed": self.on_images_renamed_pattern_changed,
@@ -379,7 +376,6 @@ class pyRenamer:
         # Init delete radio buttons
         self.delete_from.set_sensitive(False)
         self.delete_to.set_sensitive(False)
-        self.delete_end.set_sensitive(False)
 
         # Init pattern comboboxes
         self.populate_pattern_combos()
@@ -392,8 +388,8 @@ class pyRenamer:
         if not pyrenamerglob.have_hachoir and not pyrenamerglob.have_eyed3:
             self.notebook.get_nth_page(5).hide()
             self.menu_music.hide()
-        if pyrenamerglob.have_hachoir: print "Using hachoir for music renaming."
-        elif pyrenamerglob.have_eyed3: print "Using eyed3 for music renaming."
+        if pyrenamerglob.have_hachoir: print("Using hachoir for music renaming.")
+        elif pyrenamerglob.have_eyed3: print("Using eyed3 for music renaming.")
 
         # Init the undo/redo manager
         self.undo_manager = pyrenamer_undo.PyrenamerUndo()
@@ -401,12 +397,17 @@ class pyRenamer:
         self.menu_redo.set_sensitive(False)
 
 
+    def debug(self, messgae):
+        """ call the debug function
+        """
+        if self.debug:
+            print(message, file=stderr)
 
 #---------------------------------------------------------------------------------------
 # Model and View stuff
 
     def create_selected_files_treeview(self):
-    	""" Create the TreeView and the ScrolledWindow for the selected files """
+        """ Create the TreeView and the ScrolledWindow for the selected files """
         view = gtk.TreeView()
         view.set_headers_visible(True)
         view.set_enable_search(True)
@@ -426,9 +427,9 @@ class pyRenamer:
 
 
     def create_model(self):
-    	""" Create the model to hold the needed data
+        """ Create the model to hold the needed data
         Model = [file, /path/to/file, newfilename, /path/to/newfilename] """
-        self.file_selected_model = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gtk.gdk.Pixbuf)
+        self.file_selected_model = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gdk.Pixbuf)
         self.selected_files.set_model(self.file_selected_model)
 
         renderer0 = gtk.CellRendererPixbuf()
@@ -451,9 +452,9 @@ class pyRenamer:
 
 
     def rename_rows(self, model, path, iter, user_data):
-    	""" This function is called by foreach to rename files on every row """
-    	ori = model.get_value(iter, 1)
-    	new = model.get_value(iter, 3)
+        """ This function is called by foreach to rename files on every row """
+        ori = model.get_value(iter, 1)
+        new = model.get_value(iter, 3)
 
         if new != None and new != '':
             result, error = renamerfilefuncs.rename_file(ori, new)
@@ -465,8 +466,8 @@ class pyRenamer:
 
 
     def preview_rename_rows(self, model, path, iter, paths):
-    	""" Called when Preview button is clicked.
-    	Get new names and paths and add it to the model """
+        """ Called when Preview button is clicked.
+        Get new names and paths and add it to the model """
 
         if (paths != None) and (path not in paths) and (paths != []):
             # Preview only selected rows (if we're not on manual rename)
@@ -527,8 +528,7 @@ class pyRenamer:
             elif self.delete_radio.get_active():
                 ini = int(self.delete_from.get_value())-1
                 to = int(self.delete_to.get_value())-1
-                end = self.delete_end.get_active()
-                newname, newpath = renamerfilefuncs.delete_from(newname, newpath, ini, to, end)
+                newname, newpath = renamerfilefuncs.delete_from(newname, newpath, ini, to)
 
         elif self.notebook.get_current_page() == 3:
             # Manual rename
@@ -648,15 +648,15 @@ class pyRenamer:
 
 
     def on_stop_button_clicked(self, widget):
-    	""" The stop button on Statusbar.
-    	Stop adding items to the selected files list and show information on statusbar """
-    	self.populate_stop()
+        """ The stop button on Statusbar.
+        Stop adding items to the selected files list and show information on statusbar """
+        self.populate_stop()
 
 
     def on_main_window_window_state_event(self, window, event):
-    	""" Thrown when window is maximized or demaximized """
-        if event.changed_mask & gtk.gdk.WINDOW_STATE_MAXIMIZED:
-            if event.new_window_state & gtk.gdk.WINDOW_STATE_MAXIMIZED:
+        """ Thrown when window is maximized or demaximized """
+        if event.changed_mask & gdk.WINDOW_STATE_MAXIMIZED:
+            if event.new_window_state & gdk.WINDOW_STATE_MAXIMIZED:
                 self.window_maximized = True
                 self.statusbar.set_has_resize_grip(False)
             else:
@@ -671,7 +671,7 @@ class pyRenamer:
 
 
     def on_rename_button_clicked(self, widget):
-    	""" For everyrow rename the files as requested """
+        """ For everyrow rename the files as requested """
 
         self.undo_manager.clean()
         self.menu_undo.set_sensitive(True)
@@ -686,7 +686,7 @@ class pyRenamer:
 
 
     def on_preview_button_clicked(self, widget):
-    	""" Set the item count to zero and get new names and paths for files on model """
+        """ Set the item count to zero and get new names and paths for files on model """
         self.count = 0
 
         # Get selected rows and execute rename function
@@ -753,12 +753,12 @@ class pyRenamer:
 
 
     def on_file_pattern_changed(self, widget):
-    	""" Reload the current dir 'cause we need it """
+        """ Reload the current dir 'cause we need it """
         self.dir_reload_current()
 
 
     def on_original_pattern_changed(self, widget):
-    	""" Reload current dir and disable Rename button """
+        """ Reload current dir and disable Rename button """
         self.rename_button.set_sensitive(False)
         self.menu_rename.set_sensitive(False)
         if self.autopreview:
@@ -766,7 +766,7 @@ class pyRenamer:
 
 
     def on_renamed_pattern_changed(self, widget):
-    	""" Disable Rename button (user has to click on Preview again) """
+        """ Disable Rename button (user has to click on Preview again) """
         self.rename_button.set_sensitive(False)
         self.menu_rename.set_sensitive(False)
         if self.autopreview:
@@ -774,8 +774,8 @@ class pyRenamer:
 
 
     def on_subs_spaces_toggled(self, widget):
-    	""" Enable/Disable spaces combo """
-    	self.subs_spaces_combo.set_sensitive(widget.get_active())
+        """ Enable/Disable spaces combo """
+        self.subs_spaces_combo.set_sensitive(widget.get_active())
         self.rename_button.set_sensitive(False)
         self.menu_rename.set_sensitive(False)
         if self.autopreview:
@@ -783,8 +783,8 @@ class pyRenamer:
 
 
     def on_subs_capitalization_toggled(self, widget):
-    	""" Enable/Disable caps combo """
-    	self.subs_capitalization_combo.set_sensitive(widget.get_active())
+        """ Enable/Disable caps combo """
+        self.subs_capitalization_combo.set_sensitive(widget.get_active())
         self.rename_button.set_sensitive(False)
         self.menu_rename.set_sensitive(False)
         if self.autopreview:
@@ -803,7 +803,7 @@ class pyRenamer:
 
 
     def on_subs_spaces_combo_changed(self, widget):
-    	""" Disable Rename button (user has to click on Preview again) """
+        """ Disable Rename button (user has to click on Preview again) """
         self.rename_button.set_sensitive(False)
         self.menu_rename.set_sensitive(False)
         if self.autopreview:
@@ -811,7 +811,7 @@ class pyRenamer:
 
 
     def on_subs_capitalization_combo_changed(self, widget):
-    	""" Disable Rename button (user has to click on Preview again) """
+        """ Disable Rename button (user has to click on Preview again) """
         self.rename_button.set_sensitive(False)
         self.menu_rename.set_sensitive(False)
         if self.autopreview:
@@ -858,7 +858,6 @@ class pyRenamer:
         self.insert_end.set_sensitive(True)
         self.delete_from.set_sensitive(False)
         self.delete_to.set_sensitive(False)
-        self.delete_end.set_sensitive(False)
         if self.autopreview:
             self.on_preview_button_clicked(None)
 
@@ -894,7 +893,6 @@ class pyRenamer:
         self.menu_rename.set_sensitive(False)
         self.delete_from.set_sensitive(True)
         self.delete_to.set_sensitive(True)
-        self.delete_end.set_sensitive(True)
         self.insert_entry.set_sensitive(False)
         self.insert_pos.set_sensitive(False)
         self.insert_end.set_sensitive(False)
@@ -920,15 +918,6 @@ class pyRenamer:
             self.delete_to.set_value(self.delete_from.get_value())
         if self.autopreview:
             self.on_preview_button_clicked(None)
-
-
-    def on_delete_end_toggled(self, widget):
-        """ Disable Rename button (user has to click on Preview again) """
-        self.rename_button.set_sensitive(False)
-        self.menu_rename.set_sensitive(False)
-        if self.autopreview:
-            self.on_preview_button_clicked(None)
-
 
     def on_manual_changed(self, widget):
         """ Disable Rename button (user has to click on Preview again) """
@@ -1362,7 +1351,7 @@ class pyRenamer:
 
 
     def on_main_quit(self, *args):
-    	""" Bye bye! But first, save preferences """
+        """ Bye bye! But first, save preferences """
         self.populate_stop()
         if HAS_GCONF: self.prefs.preferences_save()
         gtk.main_quit()
@@ -1377,8 +1366,8 @@ class pyRenamer:
 
 
     def dir_selected(self, obj, dir):
-    	""" The user has clicked on a directory on the left pane, so we need to load
-    	the files inside that dir on the right pane. """
+        """ The user has clicked on a directory on the left pane, so we need to load
+        the files inside that dir on the right pane. """
 
         self.active_dir = dir
         self.populate_stop()
@@ -1440,8 +1429,8 @@ class pyRenamer:
 
 
     def populate_selected_files(self, dir):
-    	""" Get the file listing using the utilities on renamerfilefuncs.
-    	Then add it to the model while updating the gui """
+        """ Get the file listing using the utilities on renamerfilefuncs.
+        Then add it to the model while updating the gui """
 
         pattern = self.file_pattern.get_text()
         recursive = self.add_recursive.get_active()
@@ -1457,21 +1446,20 @@ class pyRenamer:
     def populate_add_to_view(self, listing):
         """ Add files to the treeview """
 
-        # Don't display things while we're populating
-        self.selected_files.set_model(None)
-
         # Add items to treeview
         for elem in listing:
+            iter = self.file_selected_model.insert_before(None, None)
 
-            row = [elem[0], elem[1], None, None, self.get_icon(elem[1])]
-            self.file_selected_model.append(row)
+            self.selected_files.set_model(None)
+            self.file_selected_model.set_value(iter, 0, elem[0])
+            self.file_selected_model.set_value(iter, 1, elem[1])
+            self.file_selected_model.set_value(iter, 4, self.get_icon(elem[1]))
 
             self.progressbar.pulse()
             self.statusbar.push(self.statusbar_context, _("Adding file %s") % elem[1])
             self.count += 1
             yield True
 
-        # Show on treeview, reset progressbar and statusbar
         self.selected_files.set_model(self.file_selected_model)
         self.progressbar.set_fraction(0)
         self.statusbar.push(self.statusbar_context, _("Directory: %s - Files: %s") % (self.active_dir, self.count))
@@ -1514,66 +1502,25 @@ class pyRenamer:
         f.close()
 
 
-    def get_default_icons(self):
-
-        # Load default icon theme
-        icon_theme = gtk.icon_theme_get_default()
-
-        # Load directory icon
-        try:
-            self.icon_dir = icon_theme.load_icon("gnome-fs-directory", gtk.ICON_SIZE_MENU, 0)
-        except gobject.GError, exc:
-            try:
-                self.icon_dir =  icon_theme.load_icon("gtk-directory", gtk.ICON_SIZE_MENU, 0)
-            except:
-                self.icon_dir = None
-
-        # Load text icon
-        try:
-            self.icon_text = icon_theme.load_icon("text-x-generic", gtk.ICON_SIZE_MENU, 0)
-        except gobject.GError, exc:
-            self.icon_text = None
-
-        # Load image icon
-        try:
-            self.icon_image = icon_theme.load_icon("image-x-generic", gtk.ICON_SIZE_MENU, 0)
-        except gobject.GError, exc:
-            self.icon_image = None
-
-        # Load audio icon
-        try:
-            self.icon_audio = icon_theme.load_icon("audio-x-generic", gtk.ICON_SIZE_MENU, 0)
-        except gobject.GError, exc:
-            self.icon_audio = None
-
-        # Load video icon
-        try:
-            self.icon_video = icon_theme.load_icon("video-x-generic", gtk.ICON_SIZE_MENU, 0)
-        except gobject.GError, exc:
-            self.icon_video = None
-
-        # Load package icon
-        try:
-            self.icon_package = icon_theme.load_icon("package-x-generic", gtk.ICON_SIZE_MENU, 0)
-        except gobject.GError, exc:
-            self.icon_package = None
-
-
-        return icon_theme
-
-
-    def icon_theme_changed(self, icon_theme):
-        self.get_default_icons()
-
-
     def get_icon(self, path):
 
+        icon_theme = gtk.icon_theme_get_default()
         if ospath.isdir(path):
-            return self.icon_dir
+            try:
+                icon = icon_theme.load_icon("gnome-fs-directory", 16, 0)
+                return icon
+            except gobject.GError as exc:
+                try:
+                    icon = icon_theme.load_icon("gtk-directory", 16, 0)
+                    return icon
+                except:
+                    return None
         else:
 
-            audio = ["mp3", "ogg", "wav", "aiff", "mp4", "aac"]
-            image = ["jpg", "gif", "png", "tiff", "tif", "jpeg", "xcf", "psd", "svg"]
+            mime = "text-x-generic"
+
+            audio = ["mp3", "ogg", "wav", "aiff"]
+            image = ["jpg", "gif", "png", "tiff", "tif", "jpeg"]
             video = ["avi", "ogm", "mpg", "mpeg", "mov"]
             package = ["rar", "zip", "gz", "tar", "bz2", "tgz", "deb", "rpm"]
 
@@ -1581,22 +1528,29 @@ class pyRenamer:
             ext = (file.split('.')[-1]).lower()
 
             if ext in audio:
-                return self.icon_audio
+                mime = "audio-x-generic"
+
             elif ext in image:
-                return self.icon_image
+                mime = "image-x-generic"
+
             elif ext in video:
-                return self.icon_video
+                mime = "video-x-generic"
+
             elif ext in package:
-                return self.icon_package
-            else:
-                return self.icon_text
+                mime = "package-x-generic"
+
+            try:
+                icon = icon_theme.load_icon(mime, gtk.ICON_SIZE_MENU, 0)
+                return icon
+            except gobject.GError as exc:
+                return None
 
 
 #---------------------------------------------------------------------------------------
 # Dialog methods
 
     def display_error_dialog(self, text):
-    	""" Yeps, it shows a error dialog """
+        """ Yeps, it shows a error dialog """
 
         dialog = gtk.MessageDialog(None, 0, gtk.MESSAGE_ERROR, gtk.BUTTONS_NONE, text)
         dialog.add_button(_("Ignore errors"), 1)
@@ -1614,7 +1568,7 @@ class pyRenamer:
         about.set_authors(pyrenamerglob.authors)
         #about.set_artists(pyrenamerglob.artists)
         about.set_translator_credits(_('translator-credits'))
-        about.set_logo(gtk.gdk.pixbuf_new_from_file(pyrenamerglob.icon))
+        about.set_logo(gdk.pixbuf_new_from_file(pyrenamerglob.icon))
         about.set_license(pyrenamerglob.license)
         about.set_wrap_license(True)
         about.set_comments(_(pyrenamerglob.description))

@@ -20,27 +20,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 If you find any bugs or have any suggestions email: code@infinicode.org
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+from sys import stderr
 try:
-    import pygtk
-    pygtk.require('2.0')
-except:
-      print "PyGtk 2.0 or later required for this app to run"
-      raise SystemExit
-
-try:
-    import gtk
-    import gtk.glade
-    import gobject
-except:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk as gtk
+    from gi.repository import GObject as gobject
+except Exception as e:
+    print("pyrenamer_pattern_editor.py: Gtk 3.0 or later from PyGObject required for this app to run\n{0}".format(e), file=stderr)
     raise SystemExit
 
-import pyrenamer_globals as pyrenamerglob
-
+from . import pyrenamer_globals as pyrenamerglob
 from gettext import gettext as _
 import os
 
 class PyrenamerPatternEditor:
-
+    """ class
+    """
     def __init__(self, main):
 
         self.main = main
@@ -125,7 +123,9 @@ class PyrenamerPatternEditor:
         self.selector = selector
 
         # Create the window
-        self.pattern_edit_tree = gtk.glade.XML(pyrenamerglob.gladefile, "pattern_edit_window")
+        #self.pattern_edit_tree = gtk.glade.XML(pyrenamerglob.gladefile, "pattern_edit_window")
+        self.pattern_edit_tree = gtk.Builder()
+        self.pattern_edit_tree.add_from_file(pyrenamerglob.gladefile)
 
         # Get widgets
         self.pattern_edit_window = self.pattern_edit_tree.get_widget('pattern_edit_window')
@@ -301,7 +301,9 @@ class PyrenamerPatternEditor:
         """ Create pattern add dialog and connect signals """
 
         # Create the dialog
-        tree = gtk.glade.XML(pyrenamerglob.gladefile, "add_pattern_dialog")
+        #tree = gtk.glade.XML(pyrenamerglob.gladefile, "add_pattern_dialog")
+        tree = gtk.Builder()
+        tree.add_from_file(pyrenamerglob.gladefile)
 
         # Get widgets
         dialog = tree.get_widget('add_pattern_dialog')

@@ -20,10 +20,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 If you find any bugs or have any suggestions email: code@infinicode.org
 """
 
-from hachoir_core.cmd_line import unicodeFilename
-from hachoir_parser import createParser
-from hachoir_metadata import extractMetadata
-from hachoir_metadata.metadata import MultipleMetadata
+from __future__ import absolute_import
+from hachoir.parser import createParser
+from hachoir.metadata import extractMetadata
+from hachoir.metadata.metadata import MultipleMetadata
 
 class PyrenamerMetadataException(Exception):
        def __init__(self, value):
@@ -35,7 +35,7 @@ class PyrenamerMetadata(PyrenamerMetadataException):
 
     def __init__(self,  name):
         self.real_filename = name
-        self.filename = unicodeFilename(self.real_filename)
+        self.filename = str(self.real_filename)
         self.parser = createParser(self.filename, real_filename=self.real_filename)
 
     def get_mime_type(self):
