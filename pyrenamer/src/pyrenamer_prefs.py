@@ -85,12 +85,12 @@ class PyrenamerPrefs:
         self.preferences_tree.add_from_file(pyrenamerglob.gladefile)
 
         # Get text entries and buttons
-        self.prefs_window = self.preferences_tree.get_widget('prefs_window')
-        self.prefs_entry_root = self.preferences_tree.get_widget('prefs_entry_root')
-        self.prefs_entry_active = self.preferences_tree.get_widget('prefs_entry_active')
-        self.prefs_browse_root = self.preferences_tree.get_widget('prefs_browse_root')
-        self.prefs_browse_active = self.preferences_tree.get_widget('prefs_browse_active')
-        self.prefs_close = self.preferences_tree.get_widget('prefs_close')
+        self.prefs_window = self.preferences_tree.get_object('prefs_window')
+        self.prefs_entry_root = self.preferences_tree.get_object('prefs_entry_root')
+        self.prefs_entry_active = self.preferences_tree.get_object('prefs_entry_active')
+        self.prefs_browse_root = self.preferences_tree.get_object('prefs_browse_root')
+        self.prefs_browse_active = self.preferences_tree.get_object('prefs_browse_active')
+        self.prefs_close = self.preferences_tree.get_object('prefs_close')
 
         # Signals
         signals = {

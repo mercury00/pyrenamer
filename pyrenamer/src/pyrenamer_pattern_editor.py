@@ -128,8 +128,8 @@ class PyrenamerPatternEditor:
         self.pattern_edit_tree.add_from_file(pyrenamerglob.gladefile)
 
         # Get widgets
-        self.pattern_edit_window = self.pattern_edit_tree.get_widget('pattern_edit_window')
-        self.pattern_edit_treeview = self.pattern_edit_tree.get_widget('pattern_edit_treeview')
+        self.pattern_edit_window = self.pattern_edit_tree.get_object('pattern_edit_window')
+        self.pattern_edit_treeview = self.pattern_edit_tree.get_object('pattern_edit_treeview')
 
         # Signals
         signals = {
@@ -306,7 +306,7 @@ class PyrenamerPatternEditor:
         tree.add_from_file(pyrenamerglob.gladefile)
 
         # Get widgets
-        dialog = tree.get_widget('add_pattern_dialog')
-        entry = tree.get_widget('add_pattern_entry')
+        dialog = tree.get_object('add_pattern_dialog')
+        entry = tree.get_object('add_pattern_entry')
 
         return dialog, entry
