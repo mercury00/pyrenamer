@@ -142,7 +142,8 @@ class PyrenamerPatternEditor:
                    "on_pattern_edit_treeview_button_press_event": self.on_pattern_edit_treeview_button_press_event,
                    "on_pattern_edit_window_destroy": self.on_pattern_edit_destroy,
                    }
-        self.pattern_edit_tree.signal_autoconnect(signals)
+        #self.pattern_edit_tree.signal_autoconnect(signals)
+        self.pattern_edit_tree.connect_signals(signals)
 
         # Set prefs window icon
         self.pattern_edit_window.set_icon_from_file(pyrenamerglob.icon)

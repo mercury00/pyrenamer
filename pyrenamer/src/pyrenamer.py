@@ -28,12 +28,19 @@ try:
     import gi
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk as gtk
+    #gtk.SELECTION_MULTIPLE = gtk.SelectionMode.MULTIPLE
+    #gtk.SELECTION_SINGLE = gtk.SelectionMode.SINGLE
+    #gtk.POLICY_AUTOMATIC = gtk.PolicyType.AUTOMATIC
+    #gtk.SHADOW_ETCHED_IN = gtk.ShadowType.ETCHED_IN
+    #gtk.ICON_SIZE_MENU = gtk.IconSize.MENU
+    #gtk.RELIEF_NONE = gtk.ReliefStyle.NONE
 except Exception as e:
       print("pyrenamer.py: Gtk 3.0 or later from PyGObject required for this app to run\n{0}".format(e), file=stderr)
       raise SystemExit
 try:
     from gi.repository import GObject as gobject
     from gi.repository import Gdk as gdk
+    from gi.repository import GdkPixbuf as pixbuf
     gtk.gdk = gdk
 except Exception as e:
     print("pyrenamer.py: Unable to import GObject\n{0}".format(e), file=stderr)
@@ -60,6 +67,7 @@ from os import path as ospath
 
 import locale
 import gettext
+from gettext import gettext as _
 
 gettext.bindtextdomain(pyrenamerglob.name, pyrenamerglob.locale_dir)
 gettext.textdomain(pyrenamerglob.name)
@@ -300,7 +308,8 @@ class pyRenamer:
                     "on_manual_key_press_event": self.on_manual_key_press_event,
                     "on_quit_button_clicked": self.on_main_quit }
 
-        self.glade_tree.signal_autoconnect(signals)
+        #self.glade_tree.signal_autoconnect(signals)
+        self.glade_tree.connect_signals(signals)
 
         # Create ProgressBar and add it to the StatusBar. Add also a Stop icon
         self.progressbar = gtk.ProgressBar()
@@ -308,11 +317,12 @@ class pyRenamer:
         self.progressbar.set_size_request(-1,14)
 
         self.progressbar_vbox = gtk.VBox()
-        self.progressbar_vbox.pack_start(self.progressbar, 0, 0)
+        #self.progressbar_vbox.pack_start(self.progressbar, 0, 0)
+        self.progressbar_vbox.pack_start(self.progressbar, 0, 0, 0)
         self.progressbar_vbox.set_homogeneous(True)
 
         self.stop_button = gtk.Button()
-        self.stop_button.set_relief(gtk.RELIEF_NONE)
+        self.stop_button.set_relief(gtk.ReliefStyle.NONE)
 
         stop_image = gtk.Image()
         stop_image.set_from_file(pyrenamerglob.pixmaps_dir+'/stop.png')
@@ -320,8 +330,10 @@ class pyRenamer:
         self.stop_button.connect("clicked", self.on_stop_button_clicked)
         self.stop_button.set_image(stop_image)
 
-        self.statusbar.pack_start(self.stop_button,0,0)
-        self.statusbar.pack_start(self.progressbar_vbox,0,0)
+        #self.statusbar.pack_start(self.stop_button,0,0)
+        #self.statusbar.pack_start(self.progressbar_vbox,0,0)
+        self.statusbar.pack_start(self.stop_button,0,0,0)
+        self.statusbar.pack_start(self.progressbar_vbox,0,0,0)
         self.statusbar.set_size_request(-1,20)
         self.statusbar.show_all()
         self.stop_button.hide()
@@ -413,13 +425,13 @@ class pyRenamer:
         view.set_enable_search(True)
         view.set_reorderable(False)
         view.set_rules_hint(True)
-        view.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+        view.get_selection().set_mode(gtk.SelectionMode.MULTIPLE)
         view.connect("cursor-changed", self.on_selected_files_cursor_changed)
 
         # Create scrollbars around the view
         scrolled = gtk.ScrolledWindow()
-        scrolled.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrolled.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+        scrolled.set_policy(gtk.PolicyType.AUTOMATIC, gtk.PolicyType.AUTOMATIC)
+        scrolled.set_shadow_type(gtk.ShadowType.ETCHED_IN)
         scrolled.add(view)
         scrolled.show()
 
@@ -429,7 +441,7 @@ class pyRenamer:
     def create_model(self):
         """ Create the model to hold the needed data
         Model = [file, /path/to/file, newfilename, /path/to/newfilename] """
-        self.file_selected_model = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gdk.Pixbuf)
+        self.file_selected_model = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.GType(pixbuf.Pixbuf))
         self.selected_files.set_model(self.file_selected_model)
 
         renderer0 = gtk.CellRendererPixbuf()
@@ -532,7 +544,7 @@ class pyRenamer:
 
         elif self.notebook.get_current_page() == 3:
             # Manual rename
-            self.selected_files.get_selection().set_mode(gtk.SELECTION_SINGLE)
+            self.selected_files.get_selection().set_mode(gtk.SelectionMode.SINGLE)
             nmodel, niter = self.selected_files.get_selection().get_selected()
             if niter != None:
                 if nmodel.get_value(niter,0) == name:
@@ -541,7 +553,7 @@ class pyRenamer:
                 else:
                     newname = model.get_value(iter, 2)
                     newpath = model.get_value(iter, 3)
-            self.selected_files.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+            self.selected_files.get_selection().set_mode(gtk.SelectionMode.MULTIPLE)
 
         elif self.notebook.get_current_page() == 4:
             # Replace images using patterns
@@ -636,7 +648,7 @@ class pyRenamer:
         if self.notebook.get_current_page() == 3:
             # Manual rename
             try:
-                self.selected_files.get_selection().set_mode(gtk.SELECTION_SINGLE)
+                self.selected_files.get_selection().set_mode(gtk.SelectionMode.SINGLE)
                 model, iter = treeview.get_selection().get_selected()
                 name = model.get_value(iter,0)
                 newname = model.get_value(iter,2)
@@ -655,8 +667,8 @@ class pyRenamer:
 
     def on_main_window_window_state_event(self, window, event):
         """ Thrown when window is maximized or demaximized """
-        if event.changed_mask & gdk.WINDOW_STATE_MAXIMIZED:
-            if event.new_window_state & gdk.WINDOW_STATE_MAXIMIZED:
+        if event.changed_mask & gdk.WindowState.MAXIMIZED:
+            if event.new_window_state & gdk.WindowState.MAXIMIZED:
                 self.window_maximized = True
                 self.statusbar.set_has_resize_grip(False)
             else:
@@ -716,7 +728,7 @@ class pyRenamer:
         if self.notebook.get_current_page() == 3:
             # Manual rename
             try:
-                self.selected_files.get_selection().set_mode(gtk.SELECTION_SINGLE)
+                self.selected_files.get_selection().set_mode(gtk.SelectionMode.SINGLE)
                 model, iter = self.selected_files.get_selection().get_selected()
                 name = model.get_value(iter,0)
                 newname = model.get_value(iter,2)
@@ -741,12 +753,12 @@ class pyRenamer:
             self.options_vbox.show()
             self.options_label.show()
             icon = self.options_button.get_child()
-            icon.set_from_stock(gtk.STOCK_CLOSE, gtk.ICON_SIZE_MENU)
+            icon.set_from_stock(gtk.STOCK_CLOSE, gtk.IconSize.MENU)
         else:
             self.options_vbox.hide()
             self.options_label.hide()
             icon = self.options_button.get_child()
-            icon.set_from_stock(gtk.STOCK_PREFERENCES, gtk.ICON_SIZE_MENU)
+            icon.set_from_stock(gtk.STOCK_PREFERENCES, gtk.IconSize.MENU)
 
         self.options_shown = state
         self.menu_show_options.set_active(state)
@@ -998,7 +1010,8 @@ class pyRenamer:
             elif text == '':
                 combo.set_active(0)
             else:
-                combo.child.set_text(text)
+                #combo.child.set_text(text)
+                combo.append_text(str(text))
 
 
         # Main original
@@ -1209,12 +1222,12 @@ class pyRenamer:
     def on_notebook_switch_page(self, notebook, page, page_num):
         """ Tab changed """
         if page_num != 3:
-            self.selected_files.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+            self.selected_files.get_selection().set_mode(gtk.SelectionMode.MULTIPLE)
 
         else:
             # Manual rename
             try:
-                self.selected_files.get_selection().set_mode(gtk.SELECTION_SINGLE)
+                self.selected_files.get_selection().set_mode(gtk.SelectionMode.SINGLE)
                 model, iter = self.selected_files.get_selection().get_selected()
                 name = model.get_value(iter,0)
                 newname = model.get_value(iter,2)
@@ -1256,14 +1269,14 @@ class pyRenamer:
     def on_select_all_activate(self, widget):
         """ Select every row on selected-files treeview """
         if self.notebook.get_current_page() == 3:
-            self.selected_files.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+            self.selected_files.get_selection().set_mode(gtk.SelectionMode.MULTIPLE)
         self.selected_files.get_selection().select_all()
 
 
     def on_select_nothing_activate(self, widget):
         """ Select nothing on selected-files treeview """
         if self.notebook.get_current_page() == 3:
-            self.selected_files.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+            self.selected_files.get_selection().set_mode(gtk.SelectionMode.MULTIPLE)
         self.selected_files.get_selection().unselect_all()
 
 
@@ -1276,7 +1289,7 @@ class pyRenamer:
         """ Key pressed on manual rename entry """
 
         if self.notebook.get_current_page() == 3:
-            self.selected_files.get_selection().set_mode(gtk.SELECTION_SINGLE)
+            self.selected_files.get_selection().set_mode(gtk.SelectionMode.SINGLE)
             if event.keyval == gtk.keysyms.Page_Up:
                 try:
                     self.preview_selected_row()
@@ -1326,7 +1339,7 @@ class pyRenamer:
                     self.manual.handler_unblock(self.manual_signal)
                 except:
                     pass
-            self.selected_files.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+            self.selected_files.get_selection().set_mode(gtk.SelectionMode.MULTIPLE)
 
 
     def on_menu_load_names_from_file_activate(self, widget):
@@ -1425,7 +1438,8 @@ class pyRenamer:
             self.populate_stop()
         else:
             populate = self.populate_add_to_view(self.listing)
-            self.populate_id.append(gobject.idle_add(populate.next))
+            #self.populate_id.append(gobject.idle_add(populate.next))
+            self.populate_id.append(gobject.idle_add(populate.__next__))
 
 
     def populate_selected_files(self, dir):
@@ -1540,7 +1554,7 @@ class pyRenamer:
                 mime = "package-x-generic"
 
             try:
-                icon = icon_theme.load_icon(mime, gtk.ICON_SIZE_MENU, 0)
+                icon = icon_theme.load_icon(mime, gtk.IconSize.MENU, 0)
                 return icon
             except gobject.GError as exc:
                 return None

@@ -99,7 +99,8 @@ class PyrenamerPrefs:
                    "on_prefs_close_clicked": self.on_prefs_close_clicked,
                    "on_prefs_window_destroy": self.on_prefs_destroy,
                    }
-        self.preferences_tree.signal_autoconnect(signals)
+        #self.preferences_tree.signal_autoconnect(signals)
+        self.preferences_tree.connect_signals(signals)
 
         # Fill the panel with gconf values or actual values (if gconf is empty)
         client = self.gconf_client
@@ -228,15 +229,15 @@ class PyrenamerPrefs:
         """ Width and height are saved on the configure_event callback for main_window """
         client = self.gconf_client
         client.set_int(self.gconf_pane_position, self.main.pane_position)
-        client.set_bool(self.gconf_window_maximized, self.main.window_maximized)
+        client.set_boolean(self.gconf_window_maximized, self.main.window_maximized)
         client.set_int(self.gconf_window_width, self.main.window_width)
         client.set_int(self.gconf_window_height, self.main.window_height)
         client.set_int(self.gconf_window_posx, self.main.window_posx)
         client.set_int(self.gconf_window_posy, self.main.window_posy)
-        client.set_bool(self.gconf_options_shown, self.main.options_shown)
+        client.set_boolean(self.gconf_options_shown, self.main.options_shown)
         client.set_int(self.gconf_filedir, self.main.filedir)
-        client.set_bool(self.gconf_keepext, self.main.keepext)
-        client.set_bool(self.gconf_autopreview, self.main.autopreview)
+        client.set_boolean(self.gconf_keepext, self.main.keepext)
+        client.set_boolean(self.gconf_autopreview, self.main.autopreview)
 
 
     def preferences_save_dirs(self):

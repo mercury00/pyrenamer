@@ -31,6 +31,7 @@ try:
     from gi.repository import GObject as gobject
     from gi.repository import Gdk as gdk
     gtk.gdk = gdk
+    from gi.repository import GdkPixbuf as pixbuf
 except Exception as e:
     print("treefilebrowser.py: Gtk 3.0 or later from PyGObject required for this app to run\n{0}".format(e), file=stderr)
     raise SystemExit
@@ -230,7 +231,8 @@ class TreeFileBrowser(gobject.GObject):
 
     def set_cursor_on_first_row(self):
         model = self.view.get_model()
-        iter = model.get_iter_root()
+        #iter = model.get_iter_root()
+        iter = model.get_iter_first()
         path = model.get_path(iter)
         self.view.set_cursor(path)
 
@@ -251,7 +253,8 @@ class TreeFileBrowser(gobject.GObject):
 
         # Expand root
         model = self.view.get_model()
-        iter = model.get_iter_root()
+        #iter = model.get_iter_root()
+        iter = model.get_iter_first()
         path = model.get_path(iter)
         self.view.expand_row(path, False)
         iter = model.iter_children(iter)
@@ -294,7 +297,7 @@ class TreeFileBrowser(gobject.GObject):
 
             # Check if the dir is in the same path as the desired root
             long = len(roottree)
-            for i in range(int):
+            for i in range(long):
                 if  roottree[i] != dirtree[i]: return False
 
             # End checking
@@ -406,7 +409,7 @@ class TreeFileBrowser(gobject.GObject):
     def get_folder_closed_icon(self):
         """ Returns a pixbuf with the current theme closed folder icon """
 
-        icon_theme = gtk.icon_theme_get_default()
+        icon_theme = gtk.IconTheme.get_default()
         try:
             icon = icon_theme.load_icon("gnome-fs-directory", 16, 0)
             return icon
@@ -423,7 +426,7 @@ class TreeFileBrowser(gobject.GObject):
     def get_folder_opened_icon(self):
         """ Returns a pixbuf with the current theme opened folder icon """
 
-        icon_theme = gtk.icon_theme_get_default()
+        icon_theme = gtk.IconTheme.get_default()
         try:
             icon = icon_theme.load_icon("gnome-fs-directory-accept", 16, 0)
             return icon
@@ -440,7 +443,7 @@ class TreeFileBrowser(gobject.GObject):
     def get_file_icon(self):
         """ Returns a pixbuf with the current theme file icon """
 
-        icon_theme = gtk.icon_theme_get_default()
+        icon_theme = gtk.IconTheme.get_default()
         try:
             icon = icon_theme.load_icon("text-x-generic", gtk.ICON_SIZE_MENU, 0)
             return icon
@@ -455,7 +458,8 @@ class TreeFileBrowser(gobject.GObject):
     def make_view(self):
         """ Create the view itself.
             (Icon, dir name, path) """
-        self.model = gtk.TreeStore(gdk.Pixbuf, gobject.TYPE_STRING, gobject.TYPE_STRING)
+        #self.model = gtk.TreeStore(gdk.Pixbuf, gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.model = gtk.TreeStore(gobject.GType(pixbuf.Pixbuf), gobject.TYPE_STRING, gobject.TYPE_STRING)
 
         view = gtk.TreeView(self.model)
         view.set_headers_visible(False)
@@ -485,8 +489,8 @@ class TreeFileBrowser(gobject.GObject):
 
         # Create scrollbars around the view
         scrolled = gtk.ScrolledWindow()
-        scrolled.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrolled.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+        scrolled.set_policy(gtk.PolicyType.AUTOMATIC, gtk.PolicyType.AUTOMATIC)
+        scrolled.set_shadow_type(gtk.ShadowType.ETCHED_IN)
         scrolled.add(view)
         scrolled.show()
 

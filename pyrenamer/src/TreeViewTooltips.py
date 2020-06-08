@@ -134,12 +134,13 @@ class TreeViewTooltips:
         '''
 
         # create the window
-        self.window = window = gtk.Window(gtk.WINDOW_POPUP)
+        self.window = window = gtk.Window(gtk.WindowType.POPUP)
         window.set_name('gtk-tooltips')
         window.set_resizable(False)
         window.set_border_width(4)
         window.set_app_paintable(True)
-        window.connect("expose-event", self.__on_expose_event)
+        #window.connect("expose-event", self.__on_expose_event)
+        window.connect("draw", self.__on_expose_event)
 
 
         # create the label
@@ -264,8 +265,8 @@ class TreeViewTooltips:
         # black border (default gtk Style).  This code is a
         # transliteration of the C implementation of gtk.Tooltips.
         w, h = window.size_request()
-        window.style.paint_flat_box(window.window, gtk.STATE_NORMAL,
-                                    gtk.SHADOW_OUT, None, window,
+        window.style.paint_flat_box(window.window, gtk.StateType.NORMAL,
+                                    gtk.ShadowType.OUT, None, window,
                                     'tooltip', 0, 0, w, h)
 
     def location(self, x, y, w, h):
