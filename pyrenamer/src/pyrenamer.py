@@ -131,7 +131,7 @@ class pyRenamer:
         # Init Glade stuff
         #get XML tree "main_window"
         self.glade_tree = gtk.Builder()
-        self.glade_tree.add_from_file(pyrenamerglob.gladefile)
+        self.glade_tree.add_from_file(pyrenamerglob.gladefile + '.main_window')
 
         # Get some widgets
         self.main_window = self.glade_tree.get_object("main_window")
@@ -1348,7 +1348,7 @@ class pyRenamer:
         filename = ""
         f = gtk.FileChooserDialog(_('Select file'),
                                   self.main_window,
-                                  gtk.FILE_CHOOSER_ACTION_OPEN,
+                                  gtk.FileChooserAction.OPEN,
                                   (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                                    gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
                                    )
@@ -1518,7 +1518,7 @@ class pyRenamer:
 
     def get_icon(self, path):
 
-        icon_theme = gtk.icon_theme_get_default()
+        icon_theme = gtk.IconTheme.get_default()
         if ospath.isdir(path):
             try:
                 icon = icon_theme.load_icon("gnome-fs-directory", 16, 0)

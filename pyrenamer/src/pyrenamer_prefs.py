@@ -82,7 +82,8 @@ class PyrenamerPrefs:
         # Create the window
         #self.preferences_tree = gtk.glade.XML(pyrenamerglob.gladefile, "prefs_window")
         self.preferences_tree = gtk.Builder()
-        self.preferences_tree.add_from_file(pyrenamerglob.gladefile)
+#        self.preferences_tree.add_from_file(pyrenamerglob.gladefile)
+        self.preferences_tree.add_from_file(pyrenamerglob.gladefile + '.prefs_window')
 
         # Get text entries and buttons
         self.prefs_window = self.preferences_tree.get_object('prefs_window')
@@ -119,7 +120,7 @@ class PyrenamerPrefs:
         """ Browse root clicked """
         f = gtk.FileChooserDialog(_('Select root directory'),
                                   self.prefs_window,
-                                  gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                  gtk.FileChooserAction.SELECT_FOLDER,
                                   (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                                    gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
                                    )
@@ -136,7 +137,7 @@ class PyrenamerPrefs:
         """ Browse active clicked """
         f = gtk.FileChooserDialog(_('Select active directory'),
                                   self.prefs_window,
-                                  gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                  gtk.FileChooserAction.SELECT_FOLDER,
                                   (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                                    gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
                                    )

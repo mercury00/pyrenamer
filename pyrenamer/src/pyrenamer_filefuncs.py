@@ -152,8 +152,8 @@ def replace_spaces(name, path, mode):
         if mode == 4: ' ' -> '-'
         if mode == 5: '-' -> ' ' """
 
-    name = unicode(name)
-    path = unicode(path)
+    name = str(name)
+    path = str(path)
 
     if mode == 0:
         newname = name.replace(' ', '_')
@@ -169,7 +169,7 @@ def replace_spaces(name, path, mode):
         newname = name.replace('-', ' ')
 
     newpath = get_new_path(newname, path)
-    return unicode(newname), unicode(newpath)
+    return str(newname), str(newpath)
 
 
 def replace_capitalization(name, path, mode):
@@ -177,8 +177,8 @@ def replace_capitalization(name, path, mode):
     1: all to lowercase
     2: first letter uppercase
     3: first letter uppercase of each word """
-    name = unicode(name)
-    path = unicode(path)
+    name = str(name)
+    path = str(path)
 
     if mode == 0:
         newname = name.upper()
@@ -191,7 +191,7 @@ def replace_capitalization(name, path, mode):
         newname = ' '.join([x.capitalize() for x in name.split()])
 
     newpath = get_new_path(newname, path)
-    return unicode(newname), unicode(newpath)
+    return str(newname), str(newpath)
 
 
 def replace_with(name, path, orig, new):
@@ -199,13 +199,13 @@ def replace_with(name, path, orig, new):
     newname = name.replace(orig, new)
     newpath = get_new_path(newname, path)
 
-    return unicode(newname), unicode(newpath)
+    return str(newname), str(newpath)
 
 
 def replace_accents(name, path):
     """ Remove accents, umlauts and other locale symbols from words """
-    name = unicode(name)
-    path = unicode(path)
+    name = str(name)
+    path = str(path)
 
     newname = name.replace('á', 'a')
     newname = newname.replace('à', 'a')
@@ -269,14 +269,14 @@ def replace_accents(name, path):
     newname = newname.replace('Ů', 'U')
 
     newpath = get_new_path(newname, path)
-    return unicode(newname), unicode(newpath)
+    return str(newname), str(newpath)
 
 
 def replace_duplicated(name, path):
     """ Remove duplicated symbols """
 
-    name = unicode(name)
-    path = unicode(path)
+    name = str(name)
+    path = str(path)
 
     symbols = ['.', ' ', '-', '_']
 
@@ -289,7 +289,7 @@ def replace_duplicated(name, path):
             newname += c
 
     newpath = get_new_path(newname, path)
-    return unicode(newname), unicode(newpath)
+    return str(newname), str(newpath)
 
 
 def rename_using_patterns(name, path, pattern_ini, pattern_end, count):
@@ -302,8 +302,8 @@ def rename_using_patterns(name, path, pattern_ini, pattern_end, count):
     {X} Numbers, letters, and spaces
     {@} Trash
     """
-    name = unicode(name)
-    path = unicode(path)
+    name = str(name)
+    path = str(path)
 
     pattern = pattern_ini
     newname = pattern_end
@@ -412,16 +412,16 @@ def rename_using_patterns(name, path, pattern_ini, pattern_end, count):
 
     # Returns new name and path
     newpath = get_new_path(newname, path)
-    return unicode(newname), unicode(newpath)
+    return str(newname), str(newpath)
 
 
 def replace_images(name, path, newname, newpath):
     """ Pattern replace for images """
 
-    name = unicode(name)
-    path = unicode(path)
-    newname = unicode(newname)
-    newpath = unicode(newpath)
+    name = str(name)
+    path = str(path)
+    newname = str(newname)
+    newpath = str(newpath)
 
     # Image EXIF replacements
     date, width, height, cameramaker, cameramodel = get_exif_data(get_new_path(name, path))
@@ -467,7 +467,7 @@ def replace_images(name, path, newname, newpath):
 
     # Returns new name and path
     newpath = get_new_path(newname, path)
-    return unicode(newname), unicode(newpath)
+    return str(newname), str(newpath)
 
 
 def get_exif_data(path):
@@ -564,7 +564,7 @@ def replace_music_hachoir(name, path, newname, newpath):
 
     # Returns new name and path
     newpath = get_new_path(newname, path)
-    return unicode(newname), unicode(newpath)
+    return str(newname), str(newpath)
 
 def replace_music_eyed3(name, path, newname, newpath):
     """ Pattern replace for mp3 """
@@ -578,7 +578,7 @@ def replace_music_eyed3(name, path, newname, newpath):
         except Exception as e:
             print("ERROR eyeD3:", e)
             newpath = get_new_path('', path)
-            return '', unicode(newpath)
+            return '', str(newpath)
 
         try:
             artist = clean_metadata(tag.getArtist())
@@ -653,7 +653,7 @@ def replace_music_eyed3(name, path, newname, newpath):
 
     # Returns new name and path
     newpath = get_new_path(newname, path)
-    return unicode(newname), unicode(newpath)
+    return str(newname), str(newpath)
 
 
 def rename_file(ori, new):
@@ -687,7 +687,7 @@ def insert_at(name, path, text, pos):
         newname = name + text
 
     newpath = get_new_path(newname, path)
-    return unicode(newname), unicode(newpath)
+    return str(newname), str(newpath)
 
 
 def delete_from(name, path, ini, to):
@@ -697,7 +697,7 @@ def delete_from(name, path, ini, to):
     newname = textini + textend
 
     newpath = get_new_path(newname, path)
-    return unicode(newname), unicode(newpath)
+    return str(newname), str(newpath)
 
 def cut_extension(name, path):
     """ Remove extension from file name """

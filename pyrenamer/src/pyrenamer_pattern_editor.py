@@ -125,7 +125,7 @@ class PyrenamerPatternEditor:
         # Create the window
         #self.pattern_edit_tree = gtk.glade.XML(pyrenamerglob.gladefile, "pattern_edit_window")
         self.pattern_edit_tree = gtk.Builder()
-        self.pattern_edit_tree.add_from_file(pyrenamerglob.gladefile)
+        self.pattern_edit_tree.add_from_file(pyrenamerglob.gladefile + '.pattern_edit_window')
 
         # Get widgets
         self.pattern_edit_window = self.pattern_edit_tree.get_object('pattern_edit_window')
@@ -304,7 +304,7 @@ class PyrenamerPatternEditor:
         # Create the dialog
         #tree = gtk.glade.XML(pyrenamerglob.gladefile, "add_pattern_dialog")
         tree = gtk.Builder()
-        tree.add_from_file(pyrenamerglob.gladefile)
+        tree.add_from_file(pyrenamerglob.gladefile + '.add_pattern_dialog')
 
         # Get widgets
         dialog = tree.get_object('add_pattern_dialog')
