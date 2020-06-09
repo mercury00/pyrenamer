@@ -80,10 +80,8 @@ class PyrenamerPrefs:
     def create_preferences_dialog(self):
         """ Create Preferences dialog and connect signals """
         # Create the window
-        #self.preferences_tree = gtk.glade.XML(pyrenamerglob.gladefile, "prefs_window")
         self.preferences_tree = gtk.Builder()
-#        self.preferences_tree.add_from_file(pyrenamerglob.gladefile)
-        self.preferences_tree.add_from_file(pyrenamerglob.gladefile + '.prefs_window')
+        self.preferences_tree.add_objects_from_file(pyrenamerglob.gladefile, ("prefs_window", "prefs_window"))
 
         # Get text entries and buttons
         self.prefs_window = self.preferences_tree.get_object('prefs_window')

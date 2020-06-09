@@ -131,7 +131,7 @@ class pyRenamer:
         # Init Glade stuff
         #get XML tree "main_window"
         self.glade_tree = gtk.Builder()
-        self.glade_tree.add_from_file(pyrenamerglob.gladefile + '.main_window')
+        self.glade_tree.add_objects_from_file(pyrenamerglob.gladefile, ("main_window", "main_window"))
 
         # Get some widgets
         self.main_window = self.glade_tree.get_object("main_window")
