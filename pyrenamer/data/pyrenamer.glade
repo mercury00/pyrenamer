@@ -473,7 +473,7 @@
                             <property name="can_focus">False</property>
                             <property name="spacing">12</property>
                             <child>
-                              <object class="GtkLabel" id="label1">
+                              <object class="GtkLabel" id="label_selection_pattern">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="label" translatable="yes">Selection pattern</property>
@@ -611,7 +611,25 @@
                           <object class="GtkComboBoxText" id="renamed_pattern_combo">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <items>
+                              <item id="placeholder"/>
+                            </items>
                             <signal name="changed" handler="on_renamed_pattern_combo_changed" swapped="no"/>
+                            <child>
+                              <object class="GtkEntry" id="renamed_pattern">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can_focus">True</property>
+                                <signal name="changed" handler="on_renamed_pattern_changed" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="fill">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkListStore" id="renamed_pattern_model">
+                              </object>
+                            </child>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -639,7 +657,21 @@
 {C}		Characters (numbers and letters, not spaces)
 {X}		Numbers, letters, and spaces
 {@}	Trash </property>
+                            <items>
+                              <item id="placeholder"/>
+                            </items>
                             <signal name="changed" handler="on_original_pattern_combo_changed" swapped="no"/>
+                            <child>
+                              <object class="GtkEntry" id="original_pattern">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can_focus">True</property>
+                                <signal name="changed" handler="on_original_pattern_changed" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="fill">True</property>
+                              </packing>
+                            </child>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -788,28 +820,10 @@
                         <property name="top_attach">1</property>
                       </packing>
                     </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
                   </object>
                   <packing>
                     <property name="position">1</property>
-                    <property name="tab_fill">False</property>
+                    <property name="tab_fill">True</property>
                   </packing>
                 </child>
                 <child type="tab">
@@ -1018,7 +1032,7 @@ ____ to _
                   </object>
                   <packing>
                     <property name="position">2</property>
-                    <property name="tab_fill">False</property>
+                    <property name="tab_fill">True</property>
                   </packing>
                 </child>
                 <child type="tab">
@@ -1203,7 +1217,7 @@ ____ to _
                   </object>
                   <packing>
                     <property name="position">3</property>
-                    <property name="tab_fill">False</property>
+                    <property name="tab_fill">True</property>
                   </packing>
                 </child>
                 <child type="tab">
@@ -1218,6 +1232,7 @@ ____ to _
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
+                <!-- manual tab -->
                 <child>
                   <object class="GtkGrid" id="manual_table">
                     <property name="visible">True</property>
@@ -1278,16 +1293,10 @@ ____ to _
                         <property name="width">2</property>
                       </packing>
                     </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
                   </object>
                   <packing>
                     <property name="position">4</property>
-                    <property name="tab_fill">False</property>
+                    <property name="tab_fill">True</property>
                   </packing>
                 </child>
                 <child type="tab">
@@ -1302,6 +1311,7 @@ ____ to _
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
+                <!-- images tab -->
                 <child>
                   <object class="GtkGrid" id="images_table">
                     <property name="visible">True</property>
@@ -1356,7 +1366,21 @@ Random number replacements:
 {rand500} is random number between 0 and 500
 {rand10-20} is random number between 10 and 20
 {rand20,5} is random number between 0 and 20 of 5 digits (00012)</property>
+                            <items>
+                              <item id="placeholder"/>
+                            </items>
                         <signal name="changed" handler="on_images_renamed_pattern_combo_changed" swapped="no"/>
+                            <child>
+                              <object class="GtkEntry" id="images_renamed_pattern">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can_focus">True</property>
+                                <signal name="changed" handler="on_images_renamed_pattern_changed" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="fill">True</property>
+                              </packing>
+                            </child>
                       </object>
                       <packing>
                         <property name="left_attach">0</property>
@@ -1373,7 +1397,21 @@ Random number replacements:
 {C}		Characters (numbers and letters, not spaces)
 {X}		Numbers, letters, and spaces
 {@}	Trash</property>
+                            <items>
+                              <item id="placeholder"/>
+                            </items>
                         <signal name="changed" handler="on_images_original_pattern_combo_changed" swapped="no"/>
+                            <child>
+                              <object class="GtkEntry" id="images_original_pattern">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can_focus">True</property>
+                                <signal name="changed" handler="on_images_original_pattern_changed" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="fill">True</property>
+                              </packing>
+                            </child>
                       </object>
                       <packing>
                         <property name="left_attach">0</property>
@@ -1515,28 +1553,10 @@ Random number replacements:
                         <property name="top_attach">1</property>
                       </packing>
                     </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
                   </object>
                   <packing>
                     <property name="position">5</property>
-                    <property name="tab_fill">False</property>
+                    <property name="tab_fill">True</property>
                   </packing>
                 </child>
                 <child type="tab">
@@ -1551,7 +1571,8 @@ Random number replacements:
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
-                <child>
+               <!-- music tab --> 
+               <child>
                   <object class="GtkGrid" id="music_table">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -1596,7 +1617,21 @@ Random number replacements:
 {rand500} is random number between 0 and 500
 {rand10-20} is random number between 10 and 20
 {rand20,5} is random number between 0 and 20 of 5 digits (00012)</property>
+                            <items>
+                              <item id="placeholder"/>
+                            </items>
                         <signal name="changed" handler="on_music_renamed_pattern_combo_changed" swapped="no"/>
+                            <child>
+                              <object class="GtkEntry" id="music_renamed_pattern">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can_focus">True</property>
+                                <signal name="changed" handler="on_music_renamed_pattern_changed" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="fill">True</property>
+                              </packing>
+                            </child>
                       </object>
                       <packing>
                         <property name="left_attach">0</property>
@@ -1613,7 +1648,21 @@ Random number replacements:
 {C}		Characters (numbers and letters, not spaces)
 {X}		Numbers, letters, and spaces
 {@}	Trash</property>
+                            <items>
+                              <item id="placeholder"/>
+                            </items>
                         <signal name="changed" handler="on_music_original_pattern_combo_changed" swapped="no"/>
+                            <child>
+                              <object class="GtkEntry" id="music_original_pattern">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="can_focus">True</property>
+                                <signal name="changed" handler="on_music_original_pattern_changed" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="fill">True</property>
+                              </packing>
+                            </child>
                       </object>
                       <packing>
                         <property name="left_attach">0</property>
@@ -1758,7 +1807,7 @@ Random number replacements:
                   </object>
                   <packing>
                     <property name="position">6</property>
-                    <property name="tab_fill">False</property>
+                    <property name="tab_fill">True</property>
                   </packing>
                 </child>
                 <child type="tab">
@@ -1775,11 +1824,12 @@ Random number replacements:
                 </child>
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
             </child>
+            <!-- end of notebook object -->
             <child>
               <object class="GtkAlignment" id="alignment_preview">
                 <property name="visible">True</property>
@@ -1978,7 +2028,7 @@ Random number replacements:
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="fill">False</property>
+                <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
             </child>
@@ -1989,6 +2039,7 @@ Random number replacements:
             <property name="position">2</property>
           </packing>
         </child>
+        <!-- end of rename boxes -->
         <child>
           <object class="GtkStatusbar" id="statusbar">
             <property name="visible">True</property>
@@ -2393,12 +2444,6 @@ Random number replacements:
                     <property name="width">2</property>
                   </packing>
                 </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -2511,7 +2556,7 @@ Random number replacements:
             <property name="can_focus">False</property>
             <property name="spacing">6</property>
             <child>
-              <object class="GtkLabel" id="label4">
+              <object class="GtkLabel" id="label_pattern">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Pattern:</property>

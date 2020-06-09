@@ -1004,24 +1004,25 @@ class pyRenamer:
             except:
                 pos = -1
 
-            text = combo.get_active_text()
+            text = combo.get_active_text() or ''
             if pos >= 0:
                 combo.set_active(pos)
             elif text == '':
                 combo.set_active(0)
             else:
-                #combo.child.set_text(text)
-                combo.append_text(str(text))
-
+                #combo.insert_text(pos, text)
+                combo.get_child().set_text(text)
 
         # Main original
         for p in main_ori:
+            #self.original_pattern_combo.set_text(p)
             self.original_pattern_combo.append_text(p)
         set_combo_element(self.original_pattern_combo, self.patterns_default["main_ori"])
         self.patterns["main_ori"] = main_ori
 
         # Main renamed
         for p in main_dest:
+            #self.renamed_pattern_combo.set_text(p)
             self.renamed_pattern_combo.append_text(p)
         set_combo_element(self.renamed_pattern_combo, self.patterns_default["main_dest"])
         self.patterns["main_dest"] = main_dest
@@ -1290,7 +1291,7 @@ class pyRenamer:
 
         if self.notebook.get_current_page() == 3:
             self.selected_files.get_selection().set_mode(gtk.SelectionMode.SINGLE)
-            if event.keyval == gtk.keysyms.Page_Up:
+            if event.keyval == gdk.KEY_Page_Up:
                 try:
                     self.preview_selected_row()
                     self.file_selected_model.foreach(self.enable_rename_and_clean)
@@ -1307,7 +1308,7 @@ class pyRenamer:
                     self.manual.handler_unblock(self.manual_signal)
                 except:
                     pass
-            elif event.keyval == gtk.keysyms.Page_Down:
+            elif event.keyval == gdk.KEY_Page_Down:
                 try:
                     self.preview_selected_row()
                     self.file_selected_model.foreach(self.enable_rename_and_clean)
@@ -1323,7 +1324,7 @@ class pyRenamer:
                     self.manual.handler_unblock(self.manual_signal)
                 except:
                     pass
-            elif event.keyval == gtk.keysyms.Return:
+            elif event.keyval == gdk.KEY_Return:
                 try:
                     self.preview_selected_row()
                     self.file_selected_model.foreach(self.enable_rename_and_clean)
